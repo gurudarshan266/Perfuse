@@ -2,19 +2,19 @@ package perfuse;
 
 message Request {
 
-  enum MethodType {
-    GETFILEINFO = 0;
-    GETCHUNKDATA = 1;
-    GETHASHES = 2;
-	WRITECHUNK = 3;
-	NOP = 4;
-	VIVALDIUPDATE = 5;
-  }
-  
-  required MethodType method= 1 [default = NOP];
-  required int32 reqid = 2;
-  
-  optional string filename = 3;
-  optional string hash = 4;
-  optional string data = 5;
+	enum MethodType {
+		GETFILEINFO = 0;
+		GETCHUNKDATA = 1;
+		GETHASHES = 2;
+		WRITECHUNK = 3;
+		NOP = 4;
+		VIVALDIUPDATE = 5;
+	}
+
+	required MethodType method= 1 [default = NOP];
+	required int32 reqid = 2;
+
+	optional string filename = 3;
+	optional string hash = 4;
+	optional string data = 5;
 }
