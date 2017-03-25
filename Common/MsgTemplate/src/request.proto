@@ -1,15 +1,8 @@
 package perfuse;
 
-message Request {
+import "defines.proto";
 
-	enum MethodType {
-		GETFILEINFO = 0;
-		GETCHUNKDATA = 1;
-		GETHASHES = 2;
-		WRITECHUNK = 3;
-		NOP = 4;
-		VIVALDIUPDATE = 5;
-	}
+message Request {
 
 	required MethodType method= 1 [default = NOP];
 	required int32 reqid = 2;

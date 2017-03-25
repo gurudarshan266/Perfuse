@@ -1,29 +1,9 @@
 package perfuse;
 
+import "defines.proto";
+
 message Response {
-
-	enum MethodType {
-		GETFILEINFO = 0;
-		GETCHUNKDATA = 1;
-		GETHASHES = 2;
-		WRITECHUNK = 3;
-		NOP = 4;
-		VIVALDIUPDATE = 5;
-	}
-
-	message FileInfo {
-		required string filename = 1;
-		required int32 size = 2;
-		required string lastmodified = 3;
-	}
-
-	message ChunkInfo {
-		required string hash = 1;
-		required string filename = 2;
-		required int32 offset = 3;
-		required int32 len = 4;
-	}
-
+	
 	required MethodType method = 1 [default = NOP];
 	required int32 respid = 2;
 	
