@@ -1,5 +1,6 @@
-import hashlib
+#!/usr/bin/python
 
+import hashlib
 
 def compute_hash(s):
     o = hashlib.sha1(s)

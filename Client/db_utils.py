@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import sqlite3
 
 con = None
@@ -15,11 +17,11 @@ def create_table():
     except sqlite3.Error, e:
         print "Error : %s"% e.args[0]
 
-def add_chunk(  hash, filename, offset, length):
+def add_chunk(hash, filename, offset, length):
     sql_query = "INSERT INTO CHUNKS (HASH,FILENAME,OFFSET,LEN) VALUES ('%s','%s',%d,%d);"%(hash,filename,offset,length)
     cur.execute(sql_query)
 
-def is_chunk_present( hash):
+def is_chunk_present(hash):
     cur = con.cursor()
     sql_query = "SELECT * FROM CHUNKS WHERE HASH='%s';" % hash
     cur.execute(sql_query)

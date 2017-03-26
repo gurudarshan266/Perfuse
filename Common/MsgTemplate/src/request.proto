@@ -1,3 +1,4 @@
+syntax="proto2";
 package perfuse;
 
 import "defines.proto";
