@@ -15,6 +15,7 @@ from requestpb_utils import *
 from responsepb_utils import *
 import constants
 import chunkserver_pb2_grpc
+from db_utils import *
 
 class Loopback(LoggingMixIn, Operations):
     def __init__(self, root):
@@ -24,8 +25,10 @@ class Loopback(LoggingMixIn, Operations):
         self.req_cnt = 0
 
         #Connect to server
-        self.channel = channel = grpc.insecure_channel(constants.CHUNK_SERVER_IP+":"+str(constants.CHUNK_SERVER_PORT))
+        self.channel = grpc.insecure_channel(constants.CHUNK_SERVER_IP+":"+str(constants.CHUNK_SERVER_PORT))
         self.stub = chunkserver_pb2_grpc.ChunkServerStub(self.channel)
+
+        self.db = chunk_database()
 
     def __call__(self, op, path, *args):
         return super(Loopback, self).__call__(op, self.root + path, *args)
@@ -70,7 +73,7 @@ class Loopback(LoggingMixIn, Operations):
         print(req)
         resp = self.stub.GetResponse(req)
         print(resp)
-        add_file_hashes_to_db(resp)
+        add_file_hashes_to_db(self.db,resp)
 
     def read(self, path, size, offset, fh):
         with self.rwlock:
