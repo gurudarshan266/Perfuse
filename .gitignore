@@ -1,0 +1,18 @@
+
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.so
+*.pyc
+Common/MsgTemplate/PyTemplate/
+
+# editor buffers #
+*.swp
+
+# IDE files #
+Client/.idea/
+
+*.db

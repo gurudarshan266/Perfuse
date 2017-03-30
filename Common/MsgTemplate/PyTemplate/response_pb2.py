@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='response.proto',
   package='perfuse',
   syntax='proto2',
-  serialized_pb=_b('\n\x0eresponse.proto\x12\x07perfuse\x1a\rdefines.proto\"\x91\x01\n\x08Response\x12(\n\x06method\x18\x01 \x02(\x0e\x32\x13.perfuse.MethodType:\x03NOP\x12\x0e\n\x06respid\x18\x02 \x02(\x05\x12#\n\x08\x66ileinfo\x18\x03 \x01(\x0b\x32\x11.perfuse.FileInfo\x12&\n\nchunksinfo\x18\x04 \x03(\x0b\x32\x12.perfuse.ChunkInfo')
+  serialized_pb=_b('\n\x0eresponse.proto\x12\x07perfuse\x1a\rdefines.proto\"\x92\x01\n\x08Response\x12(\n\x06method\x18\x01 \x02(\x0e\x32\x13.perfuse.MethodType:\x03NOP\x12\x0e\n\x06respid\x18\x02 \x02(\x05\x12$\n\tfilesinfo\x18\x03 \x03(\x0b\x32\x11.perfuse.FileInfo\x12&\n\nchunksinfo\x18\x04 \x03(\x0b\x32\x12.perfuse.ChunkInfo')
   ,
   dependencies=[defines__pb2.DESCRIPTOR,])
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
@@ -50,9 +50,9 @@ _RESPONSE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='fileinfo', full_name='perfuse.Response.fileinfo', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='filesinfo', full_name='perfuse.Response.filesinfo', index=2,
+      number=3, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
@@ -76,11 +76,11 @@ _RESPONSE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=43,
-  serialized_end=188,
+  serialized_end=189,
 )
 
 _RESPONSE.fields_by_name['method'].enum_type = defines__pb2._METHODTYPE
-_RESPONSE.fields_by_name['fileinfo'].message_type = defines__pb2._FILEINFO
+_RESPONSE.fields_by_name['filesinfo'].message_type = defines__pb2._FILEINFO
 _RESPONSE.fields_by_name['chunksinfo'].message_type = defines__pb2._CHUNKINFO
 DESCRIPTOR.message_types_by_name['Response'] = _RESPONSE
 

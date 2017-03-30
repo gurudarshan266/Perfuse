@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='defines.proto',
   package='perfuse',
   syntax='proto2',
-  serialized_pb=_b('\n\rdefines.proto\x12\x07perfuse\"@\n\x08\x46ileInfo\x12\x10\n\x08\x66ilename\x18\x01 \x02(\t\x12\x0c\n\x04size\x18\x02 \x02(\x05\x12\x14\n\x0clastmodified\x18\x03 \x02(\t\"H\n\tChunkInfo\x12\x0c\n\x04hash\x18\x01 \x02(\t\x12\x10\n\x08\x66ilename\x18\x02 \x02(\t\x12\x0e\n\x06offset\x18\x03 \x02(\x05\x12\x0b\n\x03len\x18\x04 \x02(\x05*j\n\nMethodType\x12\x0f\n\x0bGETFILEINFO\x10\x00\x12\x10\n\x0cGETCHUNKDATA\x10\x01\x12\r\n\tGETHASHES\x10\x02\x12\x0e\n\nWRITECHUNK\x10\x03\x12\x07\n\x03NOP\x10\x04\x12\x11\n\rVIVALDIUPDATE\x10\x05')
+  serialized_pb=_b('\n\rdefines.proto\x12\x07perfuse\"P\n\x08\x46ileInfo\x12\x10\n\x08\x66ilename\x18\x01 \x02(\t\x12\x0c\n\x04size\x18\x02 \x02(\x05\x12\x14\n\x0clastmodified\x18\x03 \x02(\t\x12\x0e\n\x06is_dir\x18\x04 \x02(\x08\"H\n\tChunkInfo\x12\x0c\n\x04hash\x18\x01 \x02(\t\x12\x10\n\x08\x66ilename\x18\x02 \x02(\t\x12\x0e\n\x06offset\x18\x03 \x02(\x05\x12\x0b\n\x03len\x18\x04 \x02(\x05*z\n\nMethodType\x12\x0f\n\x0bGETFILEINFO\x10\x00\x12\x10\n\x0cGETCHUNKDATA\x10\x01\x12\r\n\tGETHASHES\x10\x02\x12\x0e\n\nWRITECHUNK\x10\x03\x12\x07\n\x03NOP\x10\x04\x12\x11\n\rVIVALDIUPDATE\x10\x05\x12\x0e\n\nGETDIRLIST\x10\x06')
 )
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -54,11 +54,15 @@ _METHODTYPE = _descriptor.EnumDescriptor(
       name='VIVALDIUPDATE', index=5, number=5,
       options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='GETDIRLIST', index=6, number=6,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
-  serialized_start=166,
-  serialized_end=272,
+  serialized_start=182,
+  serialized_end=304,
 )
 _sym_db.RegisterEnumDescriptor(_METHODTYPE)
 
@@ -69,6 +73,7 @@ GETHASHES = 2
 WRITECHUNK = 3
 NOP = 4
 VIVALDIUPDATE = 5
+GETDIRLIST = 6
 
 
 
@@ -100,6 +105,13 @@ _FILEINFO = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
+    _descriptor.FieldDescriptor(
+      name='is_dir', full_name='perfuse.FileInfo.is_dir', index=3,
+      number=4, type=8, cpp_type=7, label=2,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
   ],
   extensions=[
   ],
@@ -113,7 +125,7 @@ _FILEINFO = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=26,
-  serialized_end=90,
+  serialized_end=106,
 )
 
 
@@ -164,8 +176,8 @@ _CHUNKINFO = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=92,
-  serialized_end=164,
+  serialized_start=108,
+  serialized_end=180,
 )
 
 DESCRIPTOR.message_types_by_name['FileInfo'] = _FILEINFO
