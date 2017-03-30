@@ -8,6 +8,6 @@ message Response {
 	required MethodType method = 1 [default = NOP];
 	required int32 respid = 2;
 	
-	optional FileInfo fileinfo = 3;
+	repeated FileInfo filesinfo = 3;
 	repeated ChunkInfo chunksinfo = 4;
 }

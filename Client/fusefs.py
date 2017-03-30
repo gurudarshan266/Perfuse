@@ -2,13 +2,16 @@
 from __future__ import print_function, absolute_import, division
 
 import logging
+import sys
+import os
+
+sys.path.append(os.path.abspath("../Common/MsgTemplate/PyTemplate"))
 
 from errno import EACCES
 from os.path import realpath
 from sys import argv, exit
 from threading import Lock
-
-import os
+from stat import *
 
 from fusepy.fuse import FUSE, FuseOSError, Operations, LoggingMixIn
 from requestpb_utils import *
@@ -31,11 +34,12 @@ class Loopback(LoggingMixIn, Operations):
         self.db = chunk_database()
 
     def __call__(self, op, path, *args):
-        return super(Loopback, self).__call__(op, self.root + path, *args)
+        return super(Loopback, self).__call__(op, path, *args)
 
     def access(self, path, mode):
-        if not os.access(path, mode):
-            raise FuseOSError(EACCES)
+        pass
+        # if not os.access(path, mode):
+        #     raise FuseOSError(EACCES)
 
     chmod = os.chmod
     chown = os.chown
@@ -48,14 +52,30 @@ class Loopback(LoggingMixIn, Operations):
 
     def fsync(self, path, datasync, fh):
         if datasync != 0:
-          return os.fdatasync(fh)
+            return os.fdatasync(fh)
         else:
-          return os.fsync(fh)
+            return os.fsync(fh)
 
     def getattr(self, path, fh=None):
-        st = os.lstat(path)
-        return dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime',
-            'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
+        if(path=="/.Trash" or path=="/.Trash-1000"):
+            raise FuseOSError(EACCES)
+
+        self.req_cnt = self.req_cnt + 1
+
+        req = request_file_info(self.req_cnt, path)
+        resp = self.stub.GetResponse(req)
+        # attr = dict()float(file.lastmodified)#to be changed
+        st = os.lstat("foo")
+        attr =  dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime','st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
+        
+        if(len(resp.filesinfo)>0):
+            file = resp.filesinfo[0]  # Only the first entry is required
+            attr['st_mtime'] = float(file.lastmodified)
+            attr['st_ctime'] = float(file.lastmodified)#to be changed
+            attr['st_atime'] = float(file.lastmodified)#to be changed
+            attr['st_size'] = file.size
+            attr['st_mode'] = 0777 | (S_IFREG if not file.is_dir else S_IFDIR)
+        return attr
 
     getxattr = None
 
@@ -81,7 +101,11 @@ class Loopback(LoggingMixIn, Operations):
             return os.read(fh, size)
 
     def readdir(self, path, fh):
-        return ['.', '..'] + os.listdir(path)
+        self.req_cnt = self.req_cnt + 1
+        req = request_dir_info(self.req_cnt, path)
+        resp = self.stub.GetResponse(req)
+        files = [f.filename for f in resp.filesinfo] #Extract just the file names from the array
+        return ['.', '..'] + files
 
     readlink = os.readlink
 
@@ -96,8 +120,8 @@ class Loopback(LoggingMixIn, Operations):
     def statfs(self, path):
         stv = os.statvfs(path)
         return dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
-            'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
-            'f_frsize', 'f_namemax'))
+                                                         'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
+                                                         'f_frsize', 'f_namemax'))
 
     def symlink(self, target, source):
         return os.symlink(source, target)
@@ -116,10 +140,8 @@ class Loopback(LoggingMixIn, Operations):
 
 
 if __name__ == '__main__':
-    if len(argv) != 3:
-        print('usage: %s <root> <mountpoint>' % argv[0])
-        exit(1)
 
     logging.basicConfig(level=logging.DEBUG)
-
-    fuse = FUSE(Loopback(argv[1]), argv[2], foreground=True)
+    root = "."
+    mount = "/tmp/fuse2/"
+    fuse = FUSE(Loopback(root), mount, foreground=True)

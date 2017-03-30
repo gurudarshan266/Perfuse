@@ -8,12 +8,14 @@ enum MethodType {
 	WRITECHUNK = 3;
 	NOP = 4;
 	VIVALDIUPDATE = 5;
+	GETDIRLIST = 6;
 }
 
 message FileInfo {
 	required string filename = 1;
 	required int32 size = 2;
 	required string lastmodified = 3;
+	required bool is_dir = 4;
 }
 
 message ChunkInfo {

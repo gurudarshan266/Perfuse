@@ -8,3 +8,17 @@ def request_file_hashes(reqid, filenm):
     r.filename = filenm
     return r
 
+def request_dir_info(reqid,dirnm):
+    r = Request()
+    r.reqid = reqid
+    r.method = GETDIRLIST
+    r.filename = dirnm
+    return r
+
+def request_file_info(reqid,filenm):
+    r = Request()
+    r.reqid = reqid
+    r.method = GETFILEINFO
+    r.filename = filenm
+    return r
+

@@ -1,6 +1,7 @@
 from concurrent import futures
 import sys
 import os
+from stat import *
 
 sys.path.append(os.path.abspath("../Common/MsgTemplate/PyTemplate"))
 sys.path.append(os.path.abspath(".."))
@@ -15,6 +16,8 @@ from response_pb2 import *
 
 from hash_utils import *
 from db_utils import *
+
+import os
 
 import glob
 
@@ -40,6 +43,28 @@ class mychunkserver(ChunkServerServicer):
                 c.filename = r[2]
                 c.offset = r[3]
                 c.len = r[4]
+
+        elif(request.method == GETDIRLIST):
+            filenm = "." + request.filename if request.filename[0] == "/" else request.filename
+            files = os.listdir("files"+request.filename)
+            print(files)
+            for file in files:
+                f = resp.filesinfo.add()
+                st = os.lstat("files/"+file)
+                f.filename = file
+                f.size = st.st_size
+                f.lastmodified = str(st.st_mtime)
+                f.is_dir = S_ISDIR(st.st_mode)
+
+        elif (request.method == GETFILEINFO):
+            filenm = "."+request.filename if request.filename[0]=="/" else request.filename
+            file = "files/" + filenm
+            st = os.lstat(file)
+            f = resp.filesinfo.add()
+            f.filename = request.filename
+            f.size = st.st_size
+            f.lastmodified = str(st.st_mtime)
+            f.is_dir = S_ISDIR(st.st_mode)
 
         print(resp)
         return resp

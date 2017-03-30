@@ -30,11 +30,13 @@ file = "RFC882"
 #simulate open call
 db = chunk_database()
 req = request_file_hashes(1,file)
-print(req)
+print("open()\n")
+# print(req)
 resp = stub.GetResponse(req)
-print(resp)
+# print(resp)
 
-for chunk in resp.chunksinfo:
-    print(chunk.hash)
-#add_file_hashes_to_db(db,resp)
-
+#simulate readdir
+req = request_dir_info(2,".")
+print("readdir()\n")
+resp = stub.GetResponse(req)
+print(resp.filesinfo[1])
