@@ -15,7 +15,8 @@ class chunk_database:
                     "HASH VARCHAR(40) NOT NULL," \
                     "FILENAME VARCHAR(255) NOT NULL," \
                     "OFFSET INT NOT NULL," \
-                    "LEN INT NOT NULL);"
+                    "LEN INT NOT NULL,"\
+                    "INCACHE INTEGER DEFAULT 0);"
         try:
             self.cur.execute(sql_query)
         except sqlite3.Error, e:
@@ -55,6 +56,27 @@ class chunk_database:
             print "Error : %s" % e.args[0]
         rows = self.cur.fetchall()
         return rows
+
+    def set_incache(self,hash,val=True):
+        value = 1 if val else 0
+        sql_query = "UPDATE CHUNKS SET INCACHE=%d WHERE HASH='%s';"%(value,hash)
+        try:
+            self.cur.execute(sql_query)
+        except sqlite3.Error, e:
+            print "Error : %s" % e.args[0]
+
+    def is_incache(self,hash,val=True):
+        sql_query = "SELECT INCACHE FROM CHUNKS WHERE HASH='%s';"%hash
+        try:
+            self.cur.execute(sql_query)
+        except sqlite3.Error, e:
+            print "Error : %s" % e.args[0]
+        rows = self.cur.fetchall()
+        if len(rows)==0:
+            return False
+        val = rows[0][0]
+        return True if val==1 else False
+
 
     def close(self):
         self.con.close()

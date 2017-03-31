@@ -76,7 +76,7 @@ class mychunkserver(ChunkServerServicer):
 def add_files_to_db(db):
     file_list = glob.glob("files/*")
     for file in file_list:
-        splice_file(db,file,file,True)
+        splice_file(db,file,file[6:],True)
         # with open(file,"r") as f:
         #     s = f.read()
         #     hash = compute_hash(s)
