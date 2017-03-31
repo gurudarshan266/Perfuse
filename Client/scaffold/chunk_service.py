@@ -16,6 +16,7 @@ from response_pb2 import *
 
 from hash_utils import *
 from db_utils import *
+from file_splicer_utils import splice_file
 
 import os
 
@@ -75,10 +76,11 @@ class mychunkserver(ChunkServerServicer):
 def add_files_to_db(db):
     file_list = glob.glob("files/*")
     for file in file_list:
-        with open(file,"r") as f:
-            s = f.read()
-            hash = compute_hash(s)
-            db.add_chunk(hash, file, offset=0, length=len(s))
+        splice_file(db,file,file,True)
+        # with open(file,"r") as f:
+        #     s = f.read()
+        #     hash = compute_hash(s)
+        #     db.add_chunk(hash, file, offset=0, length=len(s))
 
 
 def serve():
