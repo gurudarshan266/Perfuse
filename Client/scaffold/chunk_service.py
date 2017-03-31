@@ -87,6 +87,7 @@ def serve():
   db = chunk_database("files.db")
   db.create_table()
   add_files_to_db(db)
+  db.close()
 
   server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
   c = mychunkserver()

@@ -19,6 +19,7 @@ from responsepb_utils import *
 import constants
 import chunkserver_pb2_grpc
 from db_utils import *
+from file_splicer_utils import *
 
 class Loopback(LoggingMixIn, Operations):
     def __init__(self, root):
@@ -31,7 +32,8 @@ class Loopback(LoggingMixIn, Operations):
         self.channel = grpc.insecure_channel(constants.CHUNK_SERVER_IP+":"+str(constants.CHUNK_SERVER_PORT))
         self.stub = chunkserver_pb2_grpc.ChunkServerStub(self.channel)
 
-        self.db = chunk_database()
+        # self.db = chunk_database()
+
 
     def __call__(self, op, path, *args):
         return super(Loopback, self).__call__(op, path, *args)
@@ -47,7 +49,9 @@ class Loopback(LoggingMixIn, Operations):
     def create(self, path, mode):
         return os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
 
+    #TODO: Need to splice the files at this stage while writing
     def flush(self, path, fh):
+        return 0
         return os.fsync(fh)
 
     def fsync(self, path, datasync, fh):
@@ -67,7 +71,7 @@ class Loopback(LoggingMixIn, Operations):
         # attr = dict()float(file.lastmodified)#to be changed
         st = os.lstat("foo")
         attr =  dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime','st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
-        
+
         if(len(resp.filesinfo)>0):
             file = resp.filesinfo[0]  # Only the first entry is required
             attr['st_mtime'] = float(file.lastmodified)
@@ -87,8 +91,9 @@ class Loopback(LoggingMixIn, Operations):
     mknod = os.mknod
     #open = os.open
 
-    def open(self, file, flags, mode):
+    def open(self, file, mode):
         self.req_cnt = self.req_cnt + 1
+        return 5
         req = request_file_hashes(self.req_cnt,file)
         print(req)
         resp = self.stub.GetResponse(req)
@@ -96,9 +101,17 @@ class Loopback(LoggingMixIn, Operations):
         add_file_hashes_to_db(self.db,resp)
 
     def read(self, path, size, offset, fh):
-        with self.rwlock:
-            os.lseek(fh, offset, 0)
-            return os.read(fh, size)
+        print("Path = %s, Len = %d, Offset = %d"%(path,size,offset))
+        self.req_cnt = self.req_cnt + 1
+        db = chunk_database()
+        chunks_list = get_chunk_list(db,path[1:],offset,size)
+        data = get_chunks_data(chunks_list,offset,size)
+        db.close()
+        # print(data)
+        return data
+        # with self.rwlock:
+        #     os.lseek(fh, offset, 0)
+        #     return os.read(fh, size)
 
     def readdir(self, path, fh):
         self.req_cnt = self.req_cnt + 1
@@ -109,8 +122,10 @@ class Loopback(LoggingMixIn, Operations):
 
     readlink = os.readlink
 
+    #TODO: Clear off the file entries from the table
     def release(self, path, fh):
-        return os.close(fh)
+        return 0
+        # return os.close(fh)
 
     def rename(self, old, new):
         return os.rename(old, self.root + new)
