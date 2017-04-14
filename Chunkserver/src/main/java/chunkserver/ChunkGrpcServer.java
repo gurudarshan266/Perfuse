@@ -6,6 +6,8 @@ import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import chunkserver.DefinesProto.ErrorCode;
+import chunkserver.DefinesProto.FileInfo;
 import chunkserver.DefinesProto.MethodType;
 import chunkserver.RequestProto.Request;
 import chunkserver.ResponseProto.Response;
@@ -63,19 +65,29 @@ public class ChunkGrpcServer {
 		  
 		  public void getResponse(Request request, StreamObserver<Response> responseObserver) {
 			  MethodType mt = request.getMethod();
-			  System.out.println("Received message " + mt.name());
 			  int reqid = request.getReqid();
-			  String filename = request.getFilename();
-			  String chash = request.getHash();
-			  String data = request.getData();
+			  System.out.println("Received message " + mt.name());
+			  DbUtil db = new DbUtil();
 			  
-			  Response response = Response.newBuilder().setRespid(reqid).setMethod(mt).build();
+//			  FileInfo fi = FileInfo.newBuilder().setFilename("Guru").setIsDir(true).setLastmodified("12:23")
+//					  .setSize(4096).setParent(parent).build();
+//			  
+//			  Response response = Response.newBuilder().setRespid(reqid).setMethod(mt).addFilesinfo(fi).build();
+			  Response response = null;
 
 			  
 			  switch (mt) {
 			  case GETFILEINFO:
 				  /* Given a filename, retrieve metadata from the database
+				   *
 				   */
+				  FileInfo fi = db.getFileInfo(request);
+				  if (fi == null) {
+					  response = Response.newBuilder().setRespid(reqid).setMethod(mt).setEc(ErrorCode.ENOENT).build();
+				  } else {
+					  response = Response.newBuilder().setRespid(reqid).setMethod(mt).setEc(ErrorCode.NOERROR)
+							  .addFilesinfo(fi).build();
+				  }
 				  break;
 			  case GETCHUNKDATA:
 				  /* Given the filename and hash, send a request to storage server having the data
@@ -105,8 +117,11 @@ public class ChunkGrpcServer {
 				  break;
 			  case NOP:
 				  break;
-			  }
-				  
+			  default:
+				  System.out.println("Invalid message type");
+				  break;
+					  
+			  } 
 			  responseObserver.onNext(response);
 			  responseObserver.onCompleted();
 		  }

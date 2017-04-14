@@ -1,11 +1,14 @@
 package chunkserver;
 
 import java.sql.Connection;
+import java.util.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -13,10 +16,12 @@ import java.util.logging.Logger;
 
 import chunkserver.DefinesProto.ChunkInfo;
 import chunkserver.DefinesProto.FileInfo;
+import chunkserver.RequestProto.Request;
 
 /* This class has methods to create/modify/delete db tables*/
 public class DbUtil {
 	private static final Logger logger = Logger.getLogger(ChunkGrpcServer.class.getName());
+	private static final DateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 	private Connection connect = null;
 
 	public Connection getConnection(String username, String password) {
@@ -128,7 +133,7 @@ public class DbUtil {
 			PreparedStatement pstmt = connect.prepareStatement(query);
 			pstmt.setString(1, fi.getFilename());
 			pstmt.setInt(2, fi.getSize());
-			pstmt.setDate(3, (java.sql.Date) new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").parse(fi.getLastmodified()));
+			pstmt.setDate(3, (java.sql.Date) sdf.parse(fi.getLastmodified()));
 			// pstmt.setInt(4, chunk.getLength());
 			pstmt.setBoolean(4, fi.getIsDir());
 			pstmt.setString(5, fi.getParent());
@@ -153,10 +158,14 @@ public class DbUtil {
 			stmt = connect.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 
-			while (rs.next()) {
-				ChunkInfo chunk = ChunkInfo.newBuilder().setHash(rs.getString(1)).setFilename(rs.getString(2))
-						.setOffset(rs.getInt(3)).setLen(rs.getInt(4)).build();
-				chunklist.add(chunk);
+			if (!rs.next()) {
+				return null;
+			} else {
+				do {
+					ChunkInfo chunk = ChunkInfo.newBuilder().setHash(rs.getString(2)).setFilename(rs.getString(3))
+							.setOffset(rs.getInt(4)).setLen(rs.getInt(5)).build();
+					chunklist.add(chunk);
+				} while (rs.next());
 			}
 
 		} catch (SQLException e) {
@@ -184,8 +193,6 @@ public class DbUtil {
 		}
 		return dirlist;
 	}
-	
-	
 
 	private void close() {
 
@@ -205,9 +212,46 @@ public class DbUtil {
 		DbUtil db = new DbUtil();
 		db.createFileTable();
 		db.createChunkTable();
-		//db.addFileInfo(fi);
-		
+		// db.addFileInfo(fi);
 
+		FileInfo fi = FileInfo.newBuilder().setFilename("/Guru").setIsDir(true).setLastmodified(sdf.format(new Date()))
+				.setSize(4096).setParent("/").build();
+		FileInfo fi2 = FileInfo.newBuilder().setFilename("/Shravan").setIsDir(true)
+				.setLastmodified(sdf.format(new Date())).setSize(4096).setParent("/").build();
+		FileInfo fi3 = FileInfo.newBuilder().setFilename("ESA").setIsDir(false).setLastmodified(sdf.format(new Date()))
+				.setSize(1073741824).setParent("/Guru").build();
+
+		db.addFileInfo(fi);
+		db.addFileInfo(fi2);
+		db.addFileInfo(fi3);
 	}
 
+	public FileInfo getFileInfo(Request request) {
+		int reqid = request.getReqid();
+		String filename = request.getFilename();
+		String chash = request.getHash();
+		String data = request.getData();
+		String parent = request.getParent();
+
+		String query = "SELECT * FROM FILEINFO WHERE FILENAME=" + filename;
+		Connection connect = getConnection("shravan", "abc");
+		Statement stmt;
+		try {
+			stmt = connect.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (!rs.next()) {
+				return null;
+			} else {
+				FileInfo fi = FileInfo.newBuilder().setFilename(rs.getString(2)).setSize(rs.getInt(3))
+						.setLastmodified(sdf.format(rs.getDate(4))).setIsDir(rs.getBoolean(5))
+						.setParent(rs.getString(6)).build();
+				return fi;
+
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
 }

@@ -16,3 +16,18 @@ Common/MsgTemplate/PyTemplate/
 Client/.idea/
 
 *.db
+
+.metadata/
+Chunkserver/.classpath
+Chunkserver/.externalToolBuilders/
+Chunkserver/.gitignore
+Chunkserver/.gradle/
+Chunkserver/.project
+Chunkserver/.settings/
+Chunkserver/build.gradle
+Chunkserver/build/
+Chunkserver/gradle/
+Chunkserver/gradlew
+Chunkserver/gradlew.bat
+Chunkserver/settings.gradle
+
