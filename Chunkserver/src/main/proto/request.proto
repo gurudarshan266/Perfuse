@@ -1,0 +1,17 @@
+syntax="proto2";
+package perfuse;
+
+import "defines.proto";
+
+option java_package = "chunkserver";
+option java_outer_classname = "RequestProto";
+
+message Request {
+
+    required MethodType method= 1 [default = NOP];
+    required int32 reqid = 2;
+
+    optional string filename = 3;
+    optional string hash = 4;
+    optional string data = 5;
+}

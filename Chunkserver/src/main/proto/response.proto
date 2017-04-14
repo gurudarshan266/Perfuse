@@ -1,0 +1,16 @@
+syntax="proto2";
+package perfuse;
+
+import "defines.proto";
+
+option java_package = "chunkserver";
+option java_outer_classname = "ResponseProto";
+
+message Response {
+    
+    required MethodType method = 1 [default = NOP];
+    required int32 respid = 2;
+    
+    repeated FileInfo filesinfo = 3;
+    repeated ChunkInfo chunksinfo = 4;
+}

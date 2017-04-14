@@ -1,0 +1,13 @@
+syntax="proto2";
+
+option java_package = "chunkserver";
+option java_outer_classname = "ChunkServerProto";
+
+package perfuse;
+
+import "response.proto";
+import "request.proto";
+
+service ChunkServer {
+    rpc GetResponse(Request) returns (Response) {}
+}
