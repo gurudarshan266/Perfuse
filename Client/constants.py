@@ -13,3 +13,4 @@ LEN_INDEX = 4
 INCACHE_INDEX = 5
 
 TMP_DIR = "/tmp/fuse/"
+CHUNKS_DIR = "chunks/"

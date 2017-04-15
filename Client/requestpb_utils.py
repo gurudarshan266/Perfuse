@@ -30,24 +30,11 @@ def request_file_info(reqid,filenm):
     return r
 
 
-def request_write_hashes(reqid,filenm):
+def request_write_chunk(reqid,filenm):
     r = Request()
     r.reqid = reqid
-    r.method = WRITEHASHES
+    r.method = WRITECHUNK
     r.filename = filenm
     r.parent = os.path.abspath(os.path.join(filenm, os.pardir))
-
-    db = chunk_database()
-
-    #Get the chunks from DB
-    chunks = db.get_chunks_for_file(filenm)
-
-    #add to the request
-    for c in chunks:
-        c_info = r.chunksinfo.add()
-        c_info.hash = c[1]
-        c_info.filename = c[2]
-        c_info.offset = c[3]
-        c_info.len = c[4]
 
     return r

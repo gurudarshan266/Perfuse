@@ -139,14 +139,19 @@ class Loopback(LoggingMixIn, Operations):
 
         if path in self.tmp_files:
             filenm = self.tmp_files[path]
+
             # creates chunks and adds to DB.
             splice_file(db, filenm, pseudofilenm=path, write_to_chunkfile=True)
 
             #Use the written chunks data while calling write chunk data
             self.reqid = self.reqid + 1
-            req = request_write_hashes(self.reqid,path)
+
+            # Get the Storage Server's details for wrting the data
+            req = request_write_chunk(self.reqid,path)
             resp = self.stub.GetResponse(req)
 
+            #Send all teh chunk data associated with the file to a storage server
+            push_chunks_to_storage_server(resp,path)
 
             del self.tmp_files[path]
 
