@@ -8,6 +8,7 @@
 *.so
 *.pyc
 Common/MsgTemplate/PyTemplate/
+Common/MsgTemplate/src/
 
 # editor buffers #
 *.swp
