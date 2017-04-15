@@ -25,7 +25,7 @@ message FileInfo {
 
 message NodeInfo {
 	required string ip = 1;
-	optional int32 port = 2 [default = 50005];
+	optional int32 port = 2 [default = 50004];
 	required int32 vivaldimetric = 3;
 }
 message ChunkInfo {
@@ -40,3 +40,20 @@ message ChunkReq {
 	required string old_hash = 1;
 	required ChunkInfo new_chunk = 2;
 }
+
+message Empty {}
+
+//Storage Server specific Messages
+
+message ChunkData {
+	required string data = 1;                                                                  
+}
+
+//Contains CHunk information and data
+message ChunkInfoData {
+	required ChunkInfo chunkinfo = 1;
+	required ChunkData chunkdata = 2;
+}
+
+
+

@@ -1,0 +1,13 @@
+syntax="proto2";
+                                                                  
+option java_package = "storageserver";                              
+option java_outer_classname = "StorageServerProto";                 
+                                                                  
+package perfuse;                                                  
+                                                                  
+import "defines.proto";                                          
+
+service StorageServer {                                             
+    rpc GetChunkData(ChunkInfo) returns (ChunkData) {}                
+    rpc PushChunkData(ChunkInfoData) returns (Empty) {}
+}
