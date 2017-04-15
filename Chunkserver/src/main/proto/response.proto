@@ -10,8 +10,9 @@ message Response {
     
     required MethodType method = 1 [default = NOP];
     required int32 respid = 2;
-    required ErrorCode ec = 3;
+    required int32 ec = 3;
     repeated FileInfo filesinfo = 4;
     repeated ChunkInfo chunksinfo = 5;
+    repeated NodeInfo seeders = 6;
     
 }
