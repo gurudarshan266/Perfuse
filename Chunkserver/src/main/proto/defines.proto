@@ -12,6 +12,7 @@ enum MethodType {
     NOP = 4;
     VIVALDIUPDATE = 5;
     GETDIRLIST = 6;
+    WRITEHASHES = 7;
 }
 
 
@@ -153,11 +154,16 @@ message FileInfo {
     required string parent = 5;
 }
 
+message NodeInfo {
+	required string ip = 1;
+	optional int32 port = 2 [default = 50005];
+}
 message ChunkInfo {
     required string hash = 1;
     required string filename = 2;
     required int32 offset = 3;
     required int32 len = 4;
+    repeated NodeInfo seeders = 5;
 }
 
 message ChunkReq {

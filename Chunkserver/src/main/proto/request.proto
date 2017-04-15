@@ -15,4 +15,6 @@ message Request {
     optional string hash = 4;
     optional string data = 5;
     optional string parent = 6;
+
+    repeated ChunkInfo chunksinfo = 7; 
 }
