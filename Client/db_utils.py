@@ -48,6 +48,13 @@ class chunk_database:
         rows = self.cur.fetchall()[:]
         return rows
 
+    def delete_chunks_for_file(self, filenm):
+        sql_query = "DELETE FROM CHUNKS WHERE FILENAME='%s';" % filenm
+        try:
+            self.cur.execute(sql_query)
+        except sqlite3.Error, e:
+            print "Error : %s" % e.args[0]
+
     def get_all_rows(self):
         sql_query = "SELECT * FROM CHUNKS;"
         try:

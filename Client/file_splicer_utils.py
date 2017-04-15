@@ -32,6 +32,8 @@ def get_chunk_list(db, filenm, offset, len):
             chunks_list.append(c)
     return chunks_list
 
+
+#TODO:get from storage server
 def get_chunk_data(hash,offset,len):
     with open("chunks/"+hash) as f:
         f.seek(offset)

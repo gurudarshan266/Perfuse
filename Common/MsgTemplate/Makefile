@@ -1,4 +1,4 @@
 all:
-	python -m grpc_tools.protoc -Isrc/ --python_out=PyTemplate/ --grpc_python_out=PyTemplate/ src/chunkserver.proto src/request.proto src/response.proto src/defines.proto
+	python -m grpc_tools.protoc -I../../Chunkserver/src/main/proto/ --python_out=PyTemplate/ --grpc_python_out=PyTemplate/ ../../Chunkserver/src/main/proto/*.proto
 clean:
 	rm -rf PyTemplate/*	

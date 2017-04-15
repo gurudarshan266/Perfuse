@@ -32,6 +32,9 @@ class Loopback(LoggingMixIn, Operations):
         self.channel = grpc.insecure_channel(constants.CHUNK_SERVER_IP+":"+str(constants.CHUNK_SERVER_PORT))
         self.stub = chunkserver_pb2_grpc.ChunkServerStub(self.channel)
 
+        self.tmp_files = {}
+        self.tmpfiles_id = 0
+
         # self.db = chunk_database()
 
 
@@ -47,7 +50,14 @@ class Loopback(LoggingMixIn, Operations):
     chown = os.chown
 
     def create(self, path, mode):
-        return os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
+        #TODO:check if the path exists and the parent is a directory
+        tmp_filenm = TMP_DIR+"file"+self.tmpfiles_id
+        self.tmpfiles_id = self.tmpfiles_id + 1
+        self.tmp_files[path] = tmp_filenm
+        f=open(tmp_filenm,'w+')
+        f.close()
+
+        #return os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
 
     #TODO: Need to splice the files at this stage while writing
     def flush(self, path, fh):
@@ -124,6 +134,23 @@ class Loopback(LoggingMixIn, Operations):
 
     #TODO: Clear off the file entries from the table
     def release(self, path, fh):
+        db = chunk_database()
+
+
+        if path in self.tmp_files:
+            filenm = self.tmp_files[path]
+            # creates chunks and adds to DB.
+            splice_file(db, filenm, pseudofilenm=path, write_to_chunkfile=True)
+
+            #Use the written chunks data while calling write chunk data
+            self.reqid = self.reqid + 1
+            req = request_write_hashes(self.reqid,path)
+            resp = self.stub.GetResponse(req)
+
+
+            del self.tmp_files[path]
+
+        db.delete_chunks_for_file(path)
         return 0
         # return os.close(fh)
 
@@ -134,9 +161,11 @@ class Loopback(LoggingMixIn, Operations):
 
     def statfs(self, path):
         stv = os.statvfs(path)
-        return dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
+        ret_val = dict((key, getattr(stv, key)) for key in ('f_bavail', 'f_bfree',
                                                          'f_blocks', 'f_bsize', 'f_favail', 'f_ffree', 'f_files', 'f_flag',
                                                          'f_frsize', 'f_namemax'))
+        ret_val['f_bsize'] = 1
+        return ret_val
 
     def symlink(self, target, source):
         return os.symlink(source, target)
@@ -149,9 +178,14 @@ class Loopback(LoggingMixIn, Operations):
     utimens = os.utime
 
     def write(self, path, data, offset, fh):
-        with self.rwlock:
-            os.lseek(fh, offset, 0)
-            return os.write(fh, data)
+        if path in self.tmp_files:
+            with open(self.tmp_files,'w') as f:
+                f.seek(offset)
+                f.write(data)
+        return len(data)
+        # with self.rwlock:
+        #     os.lseek(fh, offset, 0)
+        #     return os.write(fh, data)
 
 
 if __name__ == '__main__':
