@@ -16,14 +16,16 @@ class chunk_database:
                     "FILENAME VARCHAR(255) NOT NULL," \
                     "OFFSET INT NOT NULL," \
                     "LEN INT NOT NULL,"\
-                    "INCACHE INTEGER DEFAULT 0);"
+                    "INCACHE INTEGER DEFAULT 0,"\
+                    "SSIP VARCHAR(15)," \
+                    "SSPORT INTEGER DEFAULT 50004);"
         try:
             self.cur.execute(sql_query)
         except sqlite3.Error, e:
             print "Error : %s" % e.args[0]
 
-    def add_chunk(self, hash, filename, offset, length):
-        sql_query = "INSERT INTO CHUNKS (HASH,FILENAME,OFFSET,LEN) VALUES ('%s','%s',%d,%d);" % (
+    def add_chunk(self, hash, filename, offset, length, ssip, ssport):
+        sql_query = "INSERT INTO CHUNKS (HASH,FILENAME,OFFSET,LEN,SSIP,SSPORT) VALUES ('%s','%s',%d,%d,'%s',%d);" % (
         hash, filename, offset, length)
         try:
             self.cur.execute(sql_query)

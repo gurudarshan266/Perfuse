@@ -10,7 +10,10 @@ import grpc
 import db_utils
 
 def add_chunk_to_db(db,chunk):
-    db.add_chunk_to_db(chunk.hash, chunk.filename, chunk.offset,chunk.len)
+    #TODO: Get the node with the lowest vivaldi metric
+    ssip = chunk.seeders[0].ip
+    ssport = chunk.seeders[0].port
+    db.add_chunk_to_db(chunk.hash, chunk.filename, chunk.offset, chunk.len, ssip, ssport)
 
 def add_file_hashes_to_db(db,resp):
 

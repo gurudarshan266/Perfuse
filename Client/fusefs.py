@@ -114,6 +114,7 @@ class Loopback(LoggingMixIn, Operations):
         print("Path = %s, Len = %d, Offset = %d"%(path,size,offset))
         self.req_cnt = self.req_cnt + 1
         db = chunk_database()
+        #get the complete chunks list for the file
         chunks_list = get_chunk_list(db,path[1:],offset,size)
         data = get_chunks_data(chunks_list,offset,size)
         db.close()

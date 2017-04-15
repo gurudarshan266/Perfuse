@@ -1,7 +1,11 @@
 from hash_utils import *
 from db_utils import chunk_database
 from  constants import *
+import storageserver_pb2_grpc
+from defines_pb2 import *
+
 import os
+import grpc
 
 def splice_file(db, filenm, pseudofilenm="", write_to_chunkfile=False):
     if pseudofilenm == "":
@@ -33,12 +37,30 @@ def get_chunk_list(db, filenm, offset, len):
     return chunks_list
 
 
-#TODO:get from storage server
-def get_chunk_data(hash,offset,len):
-    with open("chunks/"+hash) as f:
-        f.seek(offset)
-        data = f.read(len)
-    return data
+
+def get_chunk_data(hash,offset,len,ssip,ssport):
+
+    channel = grpc.insecure_channel(ssip + ":" + str(ssport))
+    stub = storageserver_pb2_grpc.ChunkServerStub(channel)
+
+    #Create CHunkInfo Object to be passed to the storage server
+    chunk_info = ChunkInfo()
+    chunk_info.hash = hash
+    chunk_info.offset = offset
+    chunk_info.len = len
+
+    #TODO: If no data is returned. Get the storage server node location from the chunk server
+    # Get ChunkData from the storage server for the requested chunk
+    chunk_data = stub.GetChunkData(chunk_info).data
+
+    return chunk_data[offset:offset+len]
+
+    # with open("chunks/"+hash) as f:
+    #     f.seek(offset)
+    #     data = f.read(len)
+    # return data
+
+
 
 def get_chunks_data(chunks_list, offset, len):
     start = offset
@@ -48,7 +70,7 @@ def get_chunks_data(chunks_list, offset, len):
         if(start>end):
             break
         len_chunk = min(c[OFFSET_INDEX]+c[LEN_INDEX],end+1)-start
-        s = get_chunk_data(c[HASH_INDEX],start-c[OFFSET_INDEX],len_chunk)
+        s = get_chunk_data(c[HASH_INDEX],start-c[OFFSET_INDEX],len_chunk,c[SSIP_INDEX],c[SSPORT_INDEX])
         start = c[OFFSET_INDEX]+c[LEN_INDEX]
         data = data + s
     return data

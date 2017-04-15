@@ -26,5 +26,5 @@ class storageserver(StorageServerServicer):
             with open(CHUNKS_DIR+chunkinfo.hash,"w+") as f:
                 f.write(request.chunkdata.data)
 
-        #Send update to Chunk Server about the chunk info
+        #TODO: Send update to Chunk Server about the chunk info
 
