@@ -26,7 +26,7 @@ class chunk_database:
 
     def add_chunk(self, hash, filename, offset, length, ssip, ssport):
         sql_query = "INSERT INTO CHUNKS (HASH,FILENAME,OFFSET,LEN,SSIP,SSPORT) VALUES ('%s','%s',%d,%d,'%s',%d);" % (
-        hash, filename, offset, length)
+        hash, filename, offset, length,ssip,ssport)
         try:
             self.cur.execute(sql_query)
             self.con.commit()
@@ -98,8 +98,8 @@ class chunk_database:
         self.con.close()
 
 # init_db()
-# mydb = chunk_database("/home/guru/esa_project/Client/tt.db")
-# mydb.create_table()
+mydb = chunk_database()
+mydb.create_table()
 # print(mydb.get_all_rows())
 # mydb.add_chunk("hello","a.txt",0,10)
 # print(mydb.get_all_rows())

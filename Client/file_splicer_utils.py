@@ -7,6 +7,8 @@ from defines_pb2 import *
 import os
 import grpc
 import os.path
+import datetime
+
 
 
 def splice_file(db, filenm, pseudofilenm="", write_to_chunkfile=False):
@@ -20,7 +22,7 @@ def splice_file(db, filenm, pseudofilenm="", write_to_chunkfile=False):
             sz = len(data)
             hash = compute_hash(data)
             is_present = db.is_chunk_present(hash)
-            db.add_chunk(hash, pseudofilenm, bytes_read, sz)
+            db.add_chunk(hash, pseudofilenm, bytes_read, sz,"abvc",0)
             bytes_read = bytes_read + sz
             if (not is_present) and write_to_chunkfile:
                 with open("chunks/"+hash,"w+") as fc:
@@ -106,6 +108,13 @@ def get_chunk_hash(chunks_list, offset):
         if(offset >= c[OFFSET_INDEX] and offset<c[OFFSET_INDEX]+c[LEN_INDEX]):
             return c[HASH_INDEX]
     return None
+
+def to_epoch(s):
+    unix_epoch = datetime.datetime(1970, 1, 1)
+
+    log_dt = datetime.datetime.strptime(s, "%Y/%m/%d %H:%M:%S")
+    seconds_from_epoch = (log_dt - unix_epoch).total_seconds()
+    return seconds_from_epoch
 
 # file = "scaffold/files/RFC882"
 # db = chunk_database()

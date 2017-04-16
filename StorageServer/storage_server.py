@@ -21,27 +21,33 @@ class storageserver(StorageServerServicer):
         db = chunk_database()
         # iter1, iter2 = itertools.tee(request_iterator)
         iter2 = request_iterator
+        print "In Push Chunk Data"
+        print request_iterator
 
         for chunkinfodata in request_iterator:
             # Copy the chunk data only if it is already not present
-            if not db.is_chunk_present(chunkinfodata.hash):
-            # Add to DB
-                db.add_chunk(chunkinfodata.hash,chunkinfodata.len)
+            if not db.is_chunk_present(chunkinfodata.chunkinfo.hash):
+                # Add to DB
+                db.add_chunk(chunkinfodata.chunkinfo.hash,chunkinfodata.chunkinfo.len)
 
                 #write to chunk file
-                with open(CHUNKS_DIR+chunkinfodata.hash,"w+") as f:
+                with open(CHUNKS_DIR+chunkinfodata.chunkinfo.hash,"w+") as f:
                     f.write(chunkinfodata.chunkdata.data)
 
                 # TODO: Verify if this change is reflected in the other iterator
                 seeder = chunkinfodata.chunkinfo.seeders.add()
                 seeder.ip = STORAGE_SERVER_IP
-                seeder.port = STORAGE_SERVER_PORT
+                seeder.port = int(STORAGE_SERVER_PORT)
+                seeder.vivaldimetric = chunkinfodata.chunkinfo.seeders[0].vivaldimetric
 
         # Send update to Chunk Server about the chunk info
         # Node info should be added before sending the update to chunk server
         channel = grpc.insecure_channel(CHUNK_SERVER_IP + ":" + CHUNK_SERVER_PORT)
         stub = chunkserver_pb2_grpc.ChunkServerStub(channel)
         stub.RouteUpdate(iter2)
+        ec = Error()
+        ec.ec = 0
+        return ec
         
 
 

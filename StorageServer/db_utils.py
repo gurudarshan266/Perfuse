@@ -1,7 +1,7 @@
 import sqlite3
 
 class chunk_database:
-    def __init__(self, name="files.db"):
+    def __init__(self, name="chunks.db"):
         self.con = sqlite3.connect(name)
         self.cur = self.con.cursor()
             # self.create_table()
@@ -83,7 +83,7 @@ class chunk_database:
         self.con.close()
 
 # init_db()
-# mydb = chunk_database("/home/guru/esa_project/Client/tt.db")
+# mydb = chunk_database("chunks.db")
 # mydb.create_table()
 # print(mydb.get_all_rows())
 # mydb.add_chunk("hello","a.txt",0,10)

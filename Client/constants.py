@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 CHUNK_SERVER_IP = "192.168.1.12"
-CHUNK_SERVER_PORT = 50051
+CHUNK_SERVER_PORT = "50051"
 
 CHUNK_SIZE = 4*1024
 
@@ -14,5 +14,5 @@ INCACHE_INDEX = 5
 SSIP_INDEX = 6
 SSPORT_INDEX = 7
 
-TMP_DIR = "/tmp/fuse/"
+TMP_DIR = "tmp/"
 CHUNKS_DIR = "chunks/"

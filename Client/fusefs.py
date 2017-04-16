@@ -53,11 +53,12 @@ class Loopback(LoggingMixIn, Operations):
 
     def create(self, path, mode):
         #TODO:check if the path exists and the parent is a directory
-        tmp_filenm = TMP_DIR+"file"+self.tmpfiles_id
+        tmp_filenm = TMP_DIR+"file"+str(self.tmpfiles_id)
         self.tmpfiles_id = self.tmpfiles_id + 1
         self.tmp_files[path] = tmp_filenm
         f=open(tmp_filenm,'w+')
         f.close()
+        return 4#self.tmpfiles_id
 
         #return os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, mode)
 
@@ -76,6 +77,12 @@ class Loopback(LoggingMixIn, Operations):
         print("In get attr")
         if(path=="/.Trash" or path=="/.Trash-1000"):
             raise FuseOSError(EACCES)
+
+        if path in self.tmp_files:
+            st = os.lstat(self.tmp_files[path])
+            attr = dict((key, getattr(st, key)) for key in
+                        ('st_atime', 'st_ctime', 'st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
+            return attr
 
         self.req_cnt = self.req_cnt + 1
 
@@ -96,9 +103,9 @@ class Loopback(LoggingMixIn, Operations):
 
         if(len(resp.filesinfo)>0):
             file = resp.filesinfo[0]  # Only the first entry is required
-            attr['st_mtime'] = st.st_mtime#file.lastmodified
-            attr['st_ctime'] = st.st_ctime#file.lastmodified#to be changed
-            attr['st_atime'] = st.st_atime#file.lastmodified#to be changed
+            attr['st_mtime'] = to_epoch(file.lastmodified)#file.lastmodified
+            attr['st_ctime'] = to_epoch(file.lastmodified)#file.lastmodified#to be changed
+            attr['st_atime'] = to_epoch(file.lastmodified)#file.lastmodified#to be changed
             attr['st_size'] = file.size
             attr['st_mode'] = 0755 | (S_IFREG if not file.is_dir else S_IFDIR)
             attr['st_nlink'] = 2
@@ -185,10 +192,10 @@ class Loopback(LoggingMixIn, Operations):
             splice_file(db, filenm, pseudofilenm=path, write_to_chunkfile=True)
 
             #Use the written chunks data while calling write chunk data
-            self.reqid = self.reqid + 1
+            self.req_cnt = self.req_cnt + 1
 
             # Get the Storage Server's details for wrting the data
-            req = request_write_chunk(self.reqid,path)
+            req = request_write_chunk(self.req_cnt,path)
             resp = self.stub.GetResponse(req)
 
             #Send all teh chunk data associated with the file to a storage server
@@ -228,7 +235,7 @@ class Loopback(LoggingMixIn, Operations):
 
         # If the file is newly created, directly write to the file
         if path in self.tmp_files:
-            with open(self.tmp_files,'w') as f:
+            with open(self.tmp_files[path],'w') as f:
                 f.seek(offset)
                 f.write(data)
 
