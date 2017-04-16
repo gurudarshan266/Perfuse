@@ -101,28 +101,44 @@ class Loopback(LoggingMixIn, Operations):
     mknod = os.mknod
     #open = os.open
 
+
+
     def open(self, file, mode):
         self.req_cnt = self.req_cnt + 1
-        return 5
+        # return 5
         req = request_file_hashes(self.req_cnt,file)
         print(req)
         resp = self.stub.GetResponse(req)
         print(resp)
         add_file_hashes_to_db(self.db,resp)
 
+
+
     def read(self, path, size, offset, fh):
         print("Path = %s, Len = %d, Offset = %d"%(path,size,offset))
-        self.req_cnt = self.req_cnt + 1
-        db = chunk_database()
-        #get the complete chunks list for the file
-        chunks_list = get_chunk_list(db,path[1:],offset,size)
-        data = get_chunks_data(chunks_list,offset,size)
-        db.close()
-        # print(data)
-        return data
+        data = ''
+        # Directly read from a file when it is newly created
+        if path in self.tmp_files:
+            with open(self.tmp_files[path],'r') as f:
+                f.seek(offset)
+                data = f.read(size)
+            return  data
+
+        #Get data from the chunks
+        else:
+            self.req_cnt = self.req_cnt + 1
+            db = chunk_database()
+            #get the complete chunks list for the file
+            chunks_list = get_chunk_list(db,path[1:],offset,size)
+            data = get_chunks_data(chunks_list,offset,size)
+            db.close()
+            # print(data)
+            return data
         # with self.rwlock:
         #     os.lseek(fh, offset, 0)
         #     return os.read(fh, size)
+
+
 
     def readdir(self, path, fh):
         self.req_cnt = self.req_cnt + 1
@@ -132,6 +148,8 @@ class Loopback(LoggingMixIn, Operations):
         return ['.', '..'] + files
 
     readlink = os.readlink
+
+
 
     #TODO: Clear off the file entries from the table
     def release(self, path, fh):

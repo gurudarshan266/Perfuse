@@ -39,24 +39,35 @@ def get_chunk_list(db, filenm, offset, len):
 
 #TODO:Get the SS IP based on the lowest vivaldi metric
 def get_chunk_data(hash,offset,len,ssip,ssport):
+    db = chunk_database()
 
-    channel = grpc.insecure_channel(ssip + ":" + str(ssport))
-    ss_stub = storageserver_pb2_grpc.StorageServerStub(channel)
+    # If the chunk is already in cache, no need to fetch it
+    if db.is_incache(hash):
+        data = ''
+        with open(CHUNKS_DIR+hash,'r') as f:
+            f.seek(offset)
+            data = f.read(len)
+        return data
 
-    #Create CHunkInfo Object to be passed to the storage server
-    chunk_info = ChunkInfo()
-    chunk_info.hash = hash
-    chunk_info.offset = offset
-    chunk_info.len = len
+    # if not present in local cache, get it from the server
+    else:
+        channel = grpc.insecure_channel(ssip + ":" + str(ssport))
+        ss_stub = storageserver_pb2_grpc.StorageServerStub(channel)
 
-    # Get ChunkData from the storage server for the requested chunk
-    chunk_data = ss_stub.GetChunkData(chunk_info).data
+        # Create CHunkInfo Object to be passed to the storage server
+        chunk_info = ChunkInfo()
+        chunk_info.hash = hash
+        chunk_info.offset = offset
+        chunk_info.len = len
 
-    #TODO: If no data is returned. Get the storage server node location from the chunk server
-    if not chunk_data.data:
-        pass
+        # Get ChunkData from the storage server for the requested chunk
+        chunk_data = ss_stub.GetChunkData(chunk_info).data
 
-    return chunk_data[offset:offset+len]
+        #TODO: If no data is returned. Get the storage server node location from the chunk server
+        if not chunk_data.data:
+            pass
+
+        return chunk_data[offset:offset+len]
 
     # with open("chunks/"+hash) as f:
     #     f.seek(offset)

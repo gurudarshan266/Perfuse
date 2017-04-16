@@ -7,7 +7,6 @@ import storageserver_pb2_grpc
 
 import grpc
 
-import db_utils
 
 def add_chunk_to_db(db,chunk):
     #TODO: Get the node with the lowest vivaldi metric

@@ -74,7 +74,7 @@ class chunk_database:
         except sqlite3.Error, e:
             print "Error : %s" % e.args[0]
 
-    def is_incache(self,hash,val=True):
+    def is_incache(self,hash):
         sql_query = "SELECT INCACHE FROM CHUNKS WHERE HASH='%s';"%hash
         try:
             self.cur.execute(sql_query)

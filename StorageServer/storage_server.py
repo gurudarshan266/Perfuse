@@ -2,6 +2,7 @@ import sys
 import os
 import grpc
 import itertools
+from concurrent import futures
 
 sys.path.append(os.path.abspath("../Common/MsgTemplate/PyTemplate"))
 sys.path.append(os.path.abspath(".."))
@@ -51,6 +52,16 @@ class storageserver(StorageServerServicer):
         chunk_data.data = s
 
         return chunk_data
+
+
+
+if __name__ == '__main__':
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    s = storageserver()
+
+    chunkserver_pb2_grpc.add_StorageServerServicer_to_server(s, server)
+    server.add_insecure_port('[::]:'+STORAGE_SERVER_PORT)
+    server.start()
 
 
 
