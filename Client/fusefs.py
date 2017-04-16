@@ -235,6 +235,11 @@ class Loopback(LoggingMixIn, Operations):
                 f.seek(offset_in_chunk)
                 f.write(data)
 
+            #TODO: Send invalidation message to chunk server
+            
+            # Update offsets of the chunk hashes following it
+            db.update_offsets(path,chunk_row[OFFSET_INDEX],delta=len(data))
+
         return len(data)
         # with self.rwlock:
         #     os.lseek(fh, offset, 0)

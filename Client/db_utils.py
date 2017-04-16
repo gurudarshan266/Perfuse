@@ -86,6 +86,13 @@ class chunk_database:
         val = rows[0][0]
         return True if val==1 else False
 
+    def update_offsets(self,filenm,start,delta):
+        sql_query = "UPDATE CHUNKS SET OFFSET = OFFSET + %d WHERE FILENAME = '%s' AND OFFSET > %d;" % (delta, filenm,start)
+        try:
+            self.cur.execute(sql_query)
+        except sqlite3.Error, e:
+            print "Error : %s" % e.args[0]
+
 
     def close(self):
         self.con.close()
