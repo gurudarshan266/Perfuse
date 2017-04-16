@@ -1,5 +1,6 @@
 package chunkserver;
 
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -11,6 +12,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Logger;
+
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
 
 import chunkserver.DefinesProto.ChunkInfo;
 import chunkserver.DefinesProto.FileInfo;
@@ -46,7 +50,7 @@ public class DbUtil {
 		String query;
 		query = "CREATE TABLE CHUNKS (" + "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
 				+ "HASH VARCHAR(40) NOT NULL," + "FILENAME VARCHAR(255) NOT NULL," + "OFFSET INT NOT NULL,"
-				+ "LEN INT NOT NULL);";
+				+ "LEN INT NOT NULL," + "SEEDERS VARCHAR(255) NOT NULL);";
 		try {
 			Statement statement = connect.createStatement();
 			ResultSet rs = statement.executeQuery(query);
@@ -173,13 +177,16 @@ public class DbUtil {
 	}
 
 	public void addChunks(ChunkInfo chunk) {
-		String query = "INSERT INTO CHUNKS VALUES (default, ?, ?, ?, ?) ";
+		String query = "INSERT INTO CHUNKS VALUES (default, ?, ?, ?, ?, ?) ";
+		Gson gson = new Gson();
+		String seeders = gson.toJson(chunk.getSeedersList());
 		try {
 			PreparedStatement pstmt = connect.prepareStatement(query);
 			pstmt.setString(1, chunk.getHash());
 			pstmt.setString(2, chunk.getFilename());
 			pstmt.setInt(3, chunk.getOffset());
 			pstmt.setInt(4, chunk.getLen());
+			pstmt.setString(5, seeders);
 			pstmt.executeUpdate();
 			logger.info(pstmt.getResultSet().toString());
 		} catch (SQLException e) {
@@ -215,6 +222,8 @@ public class DbUtil {
 		ArrayList<ChunkInfo> chunklist = new ArrayList<ChunkInfo>();
 		String query = "SELECT * FROM CHUNKS WHERE FILENAME=" + filename + ";";
 		Statement stmt;
+		chunkserver.DefinesProto.ChunkInfo.Builder builder = ChunkInfo.newBuilder();
+		ChunkInfo chunk = null;
 		try {
 			stmt = connect.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
@@ -223,7 +232,14 @@ public class DbUtil {
 				return null;
 			} else {
 				do {
-					ChunkInfo chunk = ChunkInfo.newBuilder().setHash(rs.getString(2)).setFilename(rs.getString(3))
+					Gson gson = new Gson();
+					Type nodeinfotype = new TypeToken<ArrayList<NodeInfo>>(){}.getType();
+					ArrayList<NodeInfo> nodeinfolist = gson.fromJson(rs.getString(6), nodeinfotype);
+					
+					for (NodeInfo seeder: nodeinfolist) {
+						builder.addSeeders(seeder);
+					}
+					chunk = builder.setHash(rs.getString(2)).setFilename(rs.getString(3))
 							.setOffset(rs.getInt(4)).setLen(rs.getInt(5)).build();
 					chunklist.add(chunk);
 				} while (rs.next());
@@ -278,16 +294,15 @@ public class DbUtil {
 		return null;
 	}
 
-	// private void close() {
-	//
-	// if (connect != null)
-	// try {
-	// connect.close();
-	// } catch (SQLException e) {
-	// // TODO Auto-generated catch block
-	// e.printStackTrace();
-	// }
-	// }
+	 private void close() {
+	
+	 if (connect != null)
+	 try {
+	 connect.close();
+	 } catch (SQLException e) {
+	 e.printStackTrace();
+	 }
+	 }
 
 	public static void main(String[] args) {
 

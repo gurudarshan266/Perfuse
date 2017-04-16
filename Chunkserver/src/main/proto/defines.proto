@@ -41,7 +41,9 @@ message ChunkReq {
 	required ChunkInfo new_chunk = 2;
 }
 
-message Empty {}
+message Error {
+	required int32 ec = 1;
+}
 
 //Storage Server specific Messages
 

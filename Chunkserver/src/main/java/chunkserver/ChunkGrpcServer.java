@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import chunkserver.DefinesProto.ChunkInfo;
+import chunkserver.DefinesProto.Error;
 import chunkserver.DefinesProto.FileInfo;
 import chunkserver.DefinesProto.MethodType;
 import chunkserver.DefinesProto.NodeInfo;
@@ -64,6 +65,33 @@ public class ChunkGrpcServer {
 	}
 
 	static class ChunkServerImpl extends ChunkServerGrpc.ChunkServerImplBase {
+		
+		@Override
+		public StreamObserver<ChunkInfo> routeUpdate(final StreamObserver<Error> responseObserver) {
+			return new StreamObserver<ChunkInfo>() {
+
+				DbUtil db = new DbUtil();
+
+				public void onNext(ChunkInfo chunk) {
+					db.addChunks(chunk);
+					/*
+					 * TODO: Currently the error code is always set to 0: Fix
+					 * this
+					 */
+					responseObserver.onNext(Error.newBuilder().setEc(0).build());
+
+				}
+
+				public void onError(Throwable t) {
+					System.err.println(t.getMessage());
+				}
+
+				public void onCompleted() {
+					responseObserver.onCompleted();
+				}
+
+			};
+		}
 
 		public void getResponse(Request request, StreamObserver<Response> responseObserver) {
 

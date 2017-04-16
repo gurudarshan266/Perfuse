@@ -7,7 +7,9 @@ package perfuse;
 
 import "response.proto";
 import "request.proto";
+import "defines.proto";
 
 service ChunkServer {
     rpc GetResponse(Request) returns (Response) {}
+    rpc RouteUpdate(stream ChunkInfo) returns (stream Error) {}
 }
