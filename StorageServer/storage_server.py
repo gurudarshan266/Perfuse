@@ -3,6 +3,7 @@ import os
 import grpc
 import itertools
 from concurrent import futures
+import time
 
 sys.path.append(os.path.abspath("../Common/MsgTemplate/PyTemplate"))
 sys.path.append(os.path.abspath(".."))
@@ -18,9 +19,10 @@ class storageserver(StorageServerServicer):
 
     def PushChunkData(self, request_iterator, context):
         db = chunk_database()
-        iter1, iter2 = itertools.tee(request_iterator)
+        # iter1, iter2 = itertools.tee(request_iterator)
+        iter2 = request_iterator
 
-        for chunkinfodata in iter1:
+        for chunkinfodata in request_iterator:
             # Copy the chunk data only if it is already not present
             if not db.is_chunk_present(chunkinfodata.hash):
             # Add to DB
@@ -65,9 +67,15 @@ if __name__ == '__main__':
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     s = storageserver()
 
-    chunkserver_pb2_grpc.add_StorageServerServicer_to_server(s, server)
-    server.add_insecure_port('[::]:'+STORAGE_SERVER_PORT)
+    add_StorageServerServicer_to_server(s, server)
+    server.add_insecure_port('[::]:'+str(STORAGE_SERVER_PORT))
     server.start()
+    _ONE_DAY_IN_SECONDS = 24*60*60
+    try:
+        while True:
+            time.sleep(_ONE_DAY_IN_SECONDS)
+    except KeyboardInterrupt:
+        server.stop(0)
 
 
 

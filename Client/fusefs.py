@@ -4,7 +4,7 @@ from __future__ import print_function, absolute_import, division
 import logging
 import sys
 import os
-
+import ntpath
 
 sys.path.append(os.path.abspath("../Common/MsgTemplate/PyTemplate"))
 
@@ -14,7 +14,8 @@ from sys import argv, exit
 from threading import Lock
 from stat import *
 
-from fusepy.fuse import FUSE, FuseOSError, Operations, LoggingMixIn
+# from fusepy.fuse import FUSE, FuseOSError, Operations, LoggingMixIn
+from fusepy.fuse import *
 from requestpb_utils import *
 from responsepb_utils import *
 import constants
@@ -24,7 +25,7 @@ from file_splicer_utils import *
 
 class Loopback(LoggingMixIn, Operations):
     def __init__(self, root):
-        self.root = realpath(root)
+        # self.root = realpath(root)
         self.rwlock = Lock()
 
         self.req_cnt = 0
@@ -72,29 +73,40 @@ class Loopback(LoggingMixIn, Operations):
             return os.fsync(fh)
 
     def getattr(self, path, fh=None):
+        print("In get attr")
         if(path=="/.Trash" or path=="/.Trash-1000"):
             raise FuseOSError(EACCES)
 
         self.req_cnt = self.req_cnt + 1
 
+        uid,gid,pid = fuse_get_context()
+
         req = request_file_info(self.req_cnt, path)
         resp = self.stub.GetResponse(req)
+        # print(resp)
 
         # return the error code if any
         if resp.ec < 0:
             raise FuseOSError(-1*resp.ec)
 
         # attr = dict()float(file.lastmodified)#to be changed
-        st = os.lstat("foo")
+        st = os.lstat("scaffold/")
         attr =  dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime','st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
+        # return attr
 
         if(len(resp.filesinfo)>0):
             file = resp.filesinfo[0]  # Only the first entry is required
-            attr['st_mtime'] = float(file.lastmodified)
-            attr['st_ctime'] = float(file.lastmodified)#to be changed
-            attr['st_atime'] = float(file.lastmodified)#to be changed
+            attr['st_mtime'] = st.st_mtime#file.lastmodified
+            attr['st_ctime'] = st.st_ctime#file.lastmodified#to be changed
+            attr['st_atime'] = st.st_atime#file.lastmodified#to be changed
             attr['st_size'] = file.size
-            attr['st_mode'] = 0777 | (S_IFREG if not file.is_dir else S_IFDIR)
+            attr['st_mode'] = 0755 | (S_IFREG if not file.is_dir else S_IFDIR)
+            attr['st_nlink'] = 2
+            attr['st_dev'] = 0
+            attr['st_blksize'] = 4096
+            attr['st_blocks'] = 0
+            attr['st_gid'] = gid
+            attr['st_uid'] = uid
         return attr
 
     getxattr = None
@@ -136,7 +148,7 @@ class Loopback(LoggingMixIn, Operations):
             db = chunk_database()
             #get the complete chunks list for the file
             #TODO: check why path[1:] is present
-            chunks_list = get_chunk_list(db,path[1:],offset,size)
+            chunks_list = get_chunk_list(db,path,offset,size)
             data = get_chunks_data(chunks_list,offset,size)
             db.close()
             # print(data)
@@ -151,7 +163,10 @@ class Loopback(LoggingMixIn, Operations):
         self.req_cnt = self.req_cnt + 1
         req = request_dir_info(self.req_cnt, path)
         resp = self.stub.GetResponse(req)
-        files = [f.filename for f in resp.filesinfo] #Extract just the file names from the array
+        print(resp)
+
+        # basename is required because read dir expects just the file name not the complete path
+        files = [ntpath.basename(f.filename) for f in resp.filesinfo] #Extract just the file names from the array
         return ['.', '..'] + files
 
     readlink = os.readlink
@@ -223,7 +238,7 @@ class Loopback(LoggingMixIn, Operations):
 
             # Get the row corresponding to the offset
             # len=0 so that no data is returned. Just used for downloading
-            chunk_row = get_chunk_list(db, path[1:], offset, 0)
+            chunk_row = get_chunk_list(db, path, offset, 0)
             hash = chunk_row[HASH_INDEX]
 
             # If the chunk is not in cache, download the chunk file to local cache
@@ -236,7 +251,7 @@ class Loopback(LoggingMixIn, Operations):
                 f.write(data)
 
             #TODO: Send invalidation message to chunk server
-            
+
             # Update offsets of the chunk hashes following it
             db.update_offsets(path,chunk_row[OFFSET_INDEX],delta=len(data))
 
