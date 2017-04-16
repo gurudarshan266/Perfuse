@@ -1,3 +1,5 @@
+import Utils
+
 CHUNKS_DIR = "chunks/"
 DB_NAME = "CHUNKS"
 
@@ -5,4 +7,6 @@ CHUNK_SERVER_IP = "127.0.0.1"
 CHUNK_SERVER_PORT = 50051
 
 STORAGE_SERVER_PORT = 50054
+
+STORAGE_SERVER_IP = Utils.get_my_ip()
 
