@@ -37,11 +37,11 @@ def get_chunk_list(db, filenm, offset, len):
     return chunks_list
 
 
-
+#TODO:Get the SS IP based on the lowest vivaldi metric
 def get_chunk_data(hash,offset,len,ssip,ssport):
 
     channel = grpc.insecure_channel(ssip + ":" + str(ssport))
-    stub = storageserver_pb2_grpc.ChunkServerStub(channel)
+    ss_stub = storageserver_pb2_grpc.StorageServerStub(channel)
 
     #Create CHunkInfo Object to be passed to the storage server
     chunk_info = ChunkInfo()
@@ -49,9 +49,12 @@ def get_chunk_data(hash,offset,len,ssip,ssport):
     chunk_info.offset = offset
     chunk_info.len = len
 
-    #TODO: If no data is returned. Get the storage server node location from the chunk server
     # Get ChunkData from the storage server for the requested chunk
-    chunk_data = stub.GetChunkData(chunk_info).data
+    chunk_data = ss_stub.GetChunkData(chunk_info).data
+
+    #TODO: If no data is returned. Get the storage server node location from the chunk server
+    if not chunk_data.data:
+        pass
 
     return chunk_data[offset:offset+len]
 

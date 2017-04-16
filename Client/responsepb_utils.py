@@ -40,7 +40,7 @@ def push_chunks_to_storage_server(resp,filenm):
     chunks_sql= db.get_chunks_for_file(filenm)
 
     #Send data to Storage Server
-    iterator = get_chunk_iterator(chunk_sql)
+    iterator = get_chunk_iterator(chunks_sql)
     ec = ss_stub.PushChunkData(iterator)
 
 def get_chunk_iterator(chunks_sql):
