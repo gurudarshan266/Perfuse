@@ -5,6 +5,7 @@ import logging
 import sys
 import os
 
+
 sys.path.append(os.path.abspath("../Common/MsgTemplate/PyTemplate"))
 
 from errno import EACCES

@@ -6,6 +6,8 @@ from defines_pb2 import *
 
 import os
 import grpc
+import os.path
+
 
 def splice_file(db, filenm, pseudofilenm="", write_to_chunkfile=False):
     if pseudofilenm == "":

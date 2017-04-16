@@ -6,13 +6,19 @@ from storageserver_pb2 import *
 import storageserver_pb2_grpc
 
 import grpc
+import os.path
 
+def is_chunkfile_present(hash):
+    return os.path.isfile(CHUNKS_DIR + hash)
 
 def add_chunk_to_db(db,chunk):
     #TODO: Get the node with the lowest vivaldi metric
     ssip = chunk.seeders[0].ip
     ssport = chunk.seeders[0].port
     db.add_chunk_to_db(chunk.hash, chunk.filename, chunk.offset, chunk.len, ssip, ssport)
+    #If chunk file already present, update the value in the table
+    if is_chunkfile_present(chunk.hash):
+        db.set_incache(chunk.hash, True)
 
 def add_file_hashes_to_db(db,resp):
 
