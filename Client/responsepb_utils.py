@@ -39,7 +39,12 @@ def push_chunks_to_storage_server(resp,filenm):
     # Get the chunks from DB
     chunks_sql= db.get_chunks_for_file(filenm)
 
-    # Iterate over each chunk
+    #Send data to Storage Server
+    iterator = get_chunk_iterator(chunk_sql)
+    ec = ss_stub.PushChunkData(iterator)
+
+def get_chunk_iterator(chunks_sql):
+    
     for c in chunks_sql:
 
         #Extract Data into ChunkInfo object
@@ -58,8 +63,7 @@ def push_chunks_to_storage_server(resp,filenm):
         chunk_info_data = ChunkInfoData()
         chunk_info_data.chunkinfo = c_info
         chunk_info_data.chunkdata = c_data
+        yield chunk_info_data
 
-        #Send data to Storage Server
-        ss_stub.PushChunkData(chunk_info_data)
 
 

@@ -9,5 +9,5 @@ import "defines.proto";
 
 service StorageServer {                                             
     rpc GetChunkData(ChunkInfo) returns (ChunkData) {}                
-    rpc PushChunkData(ChunkInfoData) returns (Error) {}
+    rpc PushChunkData(stream ChunkInfoData) returns (Error) {}
 }
