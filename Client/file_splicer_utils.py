@@ -32,12 +32,13 @@ def get_chunk_list(db, filenm, offset, len):
     chunks_list = []
     # print(chunks_file)
     for c in chunks_file:
-        if(start<(c[OFFSET_INDEX]+c[LEN_INDEX]) and end>(c[OFFSET_INDEX])):
+        if(start<(c[OFFSET_INDEX]+c[LEN_INDEX]) and end>=(c[OFFSET_INDEX])):
             chunks_list.append(c)
     return chunks_list
 
 
 #TODO:Get the SS IP based on the lowest vivaldi metric
+# Reads chunk from the local cache or downloads it and reads it
 def get_chunk_data(hash,offset,len,ssip,ssport):
     db = chunk_database()
 
@@ -67,6 +68,13 @@ def get_chunk_data(hash,offset,len,ssip,ssport):
         if not chunk_data.data:
             pass
 
+        # Update the in-cache attribute in the table
+        db.set_incache(hash,True)
+
+        # Write to chunk file
+        with open(CHUNKS_DIR+hash,'w+') as f:
+            f.write(chunk_data)
+
         return chunk_data[offset:offset+len]
 
     # with open("chunks/"+hash) as f:
@@ -89,6 +97,13 @@ def get_chunks_data(chunks_list, offset, len):
         data = data + s
     return data
 
+
+# Get the appropriate chunk hash for the given offset
+def get_chunk_hash(chunks_list, offset):
+    for c in chunks_list:
+        if(offset >= c[OFFSET_INDEX] and offset<c[OFFSET_INDEX]+c[LEN_INDEX]):
+            return c[HASH_INDEX]
+    return None
 
 # file = "scaffold/files/RFC882"
 # db = chunk_database()

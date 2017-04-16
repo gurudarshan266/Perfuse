@@ -78,6 +78,11 @@ class Loopback(LoggingMixIn, Operations):
 
         req = request_file_info(self.req_cnt, path)
         resp = self.stub.GetResponse(req)
+
+        # return the error code if any
+        if resp.ec < 0:
+            raise FuseOSError(-1*resp.ec)
+
         # attr = dict()float(file.lastmodified)#to be changed
         st = os.lstat("foo")
         attr =  dict((key, getattr(st, key)) for key in ('st_atime', 'st_ctime','st_gid', 'st_mode', 'st_mtime', 'st_nlink', 'st_size', 'st_uid'))
@@ -129,6 +134,7 @@ class Loopback(LoggingMixIn, Operations):
             self.req_cnt = self.req_cnt + 1
             db = chunk_database()
             #get the complete chunks list for the file
+            #TODO: check why path[1:] is present
             chunks_list = get_chunk_list(db,path[1:],offset,size)
             data = get_chunks_data(chunks_list,offset,size)
             db.close()
@@ -201,11 +207,33 @@ class Loopback(LoggingMixIn, Operations):
     unlink = os.unlink
     utimens = os.utime
 
+    #take care of append test cases
     def write(self, path, data, offset, fh):
+
+        # If the file is newly created, directly write to the file
         if path in self.tmp_files:
             with open(self.tmp_files,'w') as f:
                 f.seek(offset)
                 f.write(data)
+
+        # If not in newly created, search in local cache or download from Storage Server
+        else:
+            db = chunk_database()
+
+            # Get the row corresponding to the offset
+            # len=0 so that no data is returned. Just used for downloading
+            chunk_row = get_chunk_list(db, path[1:], offset, 0)
+            hash = chunk_row[HASH_INDEX]
+
+            # If the chunk is not in cache, download the chunk file to local cache
+            if chunk_row[INCACHE_INDEX]==0:
+                get_chunk_data(hash,0,0,chunk_row[SSIP_INDEX],chunk_row[SSPORT_INDEX])
+
+            with open(CHUNKS_DIR + chunk_row[HASH_INDEX],'w') as f:
+                offset_in_chunk = offset - chunk_row[OFFSET_INDEX]
+                f.seek(offset_in_chunk)
+                f.write(data)
+
         return len(data)
         # with self.rwlock:
         #     os.lseek(fh, offset, 0)
