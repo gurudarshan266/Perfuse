@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Logger;
 
+import chunkserver.DefinesProto.ChunkInfo;
 import chunkserver.DefinesProto.FileInfo;
 import chunkserver.DefinesProto.MethodType;
 import chunkserver.DefinesProto.NodeInfo;
@@ -65,7 +66,7 @@ public class ChunkGrpcServer {
 	static class ChunkServerImpl extends ChunkServerGrpc.ChunkServerImplBase {
 
 		public void getResponse(Request request, StreamObserver<Response> responseObserver) {
-			
+
 			MethodType mt = request.getMethod();
 			int reqid = request.getReqid();
 			System.out.println("Received message: " + mt.name() + " Req ID: " + reqid);
@@ -97,7 +98,18 @@ public class ChunkGrpcServer {
 				/*
 				 * Given a filename, check if its a file Retrieve all hashes of
 				 * the file Fill in chunkinfo struct Fill in response object
+				 * 
 				 */
+				ArrayList<ChunkInfo> hashes = db.getChunks(request.getFilename());
+				if (hashes.size() == 0) {
+					builder.setEc(-1).build();
+				} else {
+					for (int i = 0; i < hashes.size(); i++) {
+						builder.addChunksinfo(hashes.get(i));
+					}
+					response = builder.setEc(0).build();
+				}
+
 				break;
 			case WRITECHUNK:
 				/*
