@@ -33,9 +33,6 @@ message NodeInfo {
 	optional int32 vivaldimetric = 3;
 }
 
-message Seeders {
-	repeated NodeInfo seeders = 1;
-}
 message ChunkInfo {
     required string hash = 1;
     required string filename = 2;

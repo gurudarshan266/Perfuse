@@ -76,7 +76,6 @@ public class ChunkGrpcServer {
 				@Override
 				public void onNext(ChunkInfo chunk) {
 					DbUtil db = new DbUtil();
-					System.out.println("Received chunk");
 					db.addChunks(chunk);
 					/*
 					 * TODO: Currently the error code is always set to 0: Fix
