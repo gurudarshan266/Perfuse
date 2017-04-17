@@ -27,7 +27,7 @@ message FileInfo {
 message NodeInfo {
 	required string ip = 1;
 	optional int32 port = 2 [default = 50004];
-	required int32 vivaldimetric = 3;
+	optional int32 vivaldimetric = 3;
 }
 
 message Seeders {

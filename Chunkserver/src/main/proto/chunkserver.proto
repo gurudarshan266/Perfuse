@@ -12,4 +12,5 @@ import "defines.proto";
 service ChunkServer {
     rpc GetResponse(Request) returns (Response) {}
     rpc RouteUpdate(stream ChunkInfo) returns (Error) {}
+    rpc GetClosestNode(NodeInfo) returns (NodeInfo) {}
 }
