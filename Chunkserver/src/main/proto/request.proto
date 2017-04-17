@@ -17,4 +17,5 @@ message Request {
     optional string parent = 6;
 
     repeated ChunkInfo chunksinfo = 7; 
+    optional FileInfo fileinfo = 8;
 }

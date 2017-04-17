@@ -13,6 +13,7 @@ enum MethodType {
     VIVALDIUPDATE = 5;
     GETDIRLIST = 6;
     WRITEHASHES = 7;
+    UPDATEFILEINFO = 8;
 }
 
 message FileInfo {
