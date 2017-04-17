@@ -78,8 +78,21 @@ class chunk_database:
         val = rows[0][0]
         return True if val==1 else False
 
+    def get_total_size(self):
+        sql_query = "SELECT SUM(LEN) FROM CHUNKS;"
+        try:
+            self.cur.execute(sql_query)
+        except sqlite3.Error, e:
+            print "Error : %s" % e.args[0]
+        rows = self.cur.fetchone()
+        if len(rows) == 0:
+            return 0
+        return rows[0]
 
     def close(self):
+        self.con.close()
+
+    def __del__(self):
         self.con.close()
 
 # init_db()

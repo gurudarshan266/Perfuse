@@ -43,3 +43,17 @@ def request_write_chunk(reqid,filenm):
     r.parent = get_parent_dir(filenm)
 
     return r
+
+def request_update_fileinfo(reqid,filenm,sz,m_time,is_dir):
+    r = Request()
+    r.reqid = reqid
+    r.method = UPDATEFILEINFO
+    r.filename = filenm
+
+    finfo = r.fileinfo
+    finfo.filename = filenm
+    finfo.size = sz
+    finfo.lastmodified = m_time
+    finfo.is_dir = is_dir
+    finfo.parent = get_parent_dir(filenm)
+    return r

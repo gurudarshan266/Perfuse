@@ -116,6 +116,9 @@ def to_epoch(s):
     seconds_from_epoch = (log_dt - unix_epoch).total_seconds()
     return seconds_from_epoch
 
+def to_utc(t):
+    return datetime.datetime.fromtimestamp(t).strftime("%Y/%m/%d %H:%M:%S")
+
 # file = "scaffold/files/RFC882"
 # db = chunk_database()
 # db.create_table()

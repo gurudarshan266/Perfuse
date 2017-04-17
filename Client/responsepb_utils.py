@@ -23,8 +23,8 @@ def add_chunk_to_db(db,chunk):
 
 def add_file_hashes_to_db(db,resp):
 
-    if resp.method != GETHASHES:
-        return
+    # if resp.method != GETHASHES:
+    #     return
 
     for chunk in resp.chunksinfo:
         add_chunk_to_db(db,chunk)

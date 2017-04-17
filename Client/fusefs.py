@@ -184,7 +184,6 @@ class Loopback(LoggingMixIn, Operations):
     def release(self, path, fh):
         db = chunk_database()
 
-
         if path in self.tmp_files:
             filenm = self.tmp_files[path]
 
@@ -200,6 +199,13 @@ class Loopback(LoggingMixIn, Operations):
 
             #Send all teh chunk data associated with the file to a storage server
             push_chunks_to_storage_server(resp,path)
+
+            # Send update to chunkserver about file info change
+            self.req_cnt = self.req_cnt + 1
+            st = os.lstat(self.tmp_files[path])
+            mtime = to_utc(st.st_mtime)
+            req2 = request_update_fileinfo(self.req_cnt,path,st.st_size,mtime,S_ISDIR(st.st_mode))
+            resp2 = self.stub.GetResponse(req2)
 
             del self.tmp_files[path]
 

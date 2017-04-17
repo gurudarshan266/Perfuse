@@ -24,6 +24,9 @@ message FileInfo {
     required string parent = 5;
 }
 
+message Empty {
+}
+
 message NodeInfo {
 	required string ip = 1;
 	optional int32 port = 2 [default = 50004];
@@ -47,7 +50,7 @@ message ChunkReq {
 }
 
 message Error {
-	required int32 ec = 1;
+	required int32 ec = 1 [default = 0];
 }
 
 //Storage Server specific Messages
@@ -62,5 +65,8 @@ message ChunkInfoData {
 	required ChunkData chunkdata = 2;
 }
 
-
+message Capacity {
+	required int32 maxcap = 1;
+	required int32 curcap = 2;
+}
 

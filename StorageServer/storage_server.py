@@ -17,12 +17,18 @@ import chunkserver_pb2_grpc
 
 class storageserver(StorageServerServicer):
 
+    def __init__(self, max_cap):
+        self.max_cap = max_cap
+
+
     def PushChunkData(self, request_iterator, context):
         db = chunk_database()
         # iter1, iter2 = itertools.tee(request_iterator)
         iter2 = request_iterator
         print "In Push Chunk Data"
         print request_iterator
+
+        c_list = []
 
         for chunkinfodata in request_iterator:
             # Copy the chunk data only if it is already not present
@@ -40,11 +46,16 @@ class storageserver(StorageServerServicer):
                 seeder.port = int(STORAGE_SERVER_PORT)
                 seeder.vivaldimetric = chunkinfodata.chunkinfo.seeders[0].vivaldimetric
 
+            c_list.append(chunkinfodata.chunkinfo)
+
         # Send update to Chunk Server about the chunk info
         # Node info should be added before sending the update to chunk server
         channel = grpc.insecure_channel(CHUNK_SERVER_IP + ":" + CHUNK_SERVER_PORT)
         stub = chunkserver_pb2_grpc.ChunkServerStub(channel)
-        stub.RouteUpdate(iter2)
+
+        print c_list
+        x=stub.RouteUpdate(iter(c_list))
+        print "got response from server"
         ec = Error()
         ec.ec = 0
         return ec
@@ -69,9 +80,19 @@ class storageserver(StorageServerServicer):
 
 
 
+    def GetCapacity(self, request, context):
+        c = Capacity()
+        db = chunk_database()
+        c.maxcap = self.max_cap
+        c.cursz = db.get_total_size()
+        return c
+
+
+
+
 if __name__ == '__main__':
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    s = storageserver()
+    s = storageserver(1*1024*10)
 
     add_StorageServerServicer_to_server(s, server)
     server.add_insecure_port('[::]:'+str(STORAGE_SERVER_PORT))
