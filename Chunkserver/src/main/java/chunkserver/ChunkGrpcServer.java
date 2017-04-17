@@ -64,29 +64,34 @@ public class ChunkGrpcServer {
 		server.blockUntilShutdown();
 	}
 
-	static class ChunkServerImpl extends ChunkServerGrpc.ChunkServerImplBase {
+	private static class ChunkServerImpl extends ChunkServerGrpc.ChunkServerImplBase {
 		
 		@Override
 		public StreamObserver<ChunkInfo> routeUpdate(final StreamObserver<Error> responseObserver) {
 			return new StreamObserver<ChunkInfo>() {
 
-				DbUtil db = new DbUtil();
+				int ec = 0;
+//				System.out.println("Received route update message");
 
+				@Override
 				public void onNext(ChunkInfo chunk) {
+					DbUtil db = new DbUtil();
+					System.out.println("Received chunk");
 					db.addChunks(chunk);
 					/*
 					 * TODO: Currently the error code is always set to 0: Fix
 					 * this
 					 */
-					responseObserver.onNext(Error.newBuilder().setEc(0).build());
-
 				}
-
+				
+				@Override
 				public void onError(Throwable t) {
 					System.err.println(t.getMessage());
 				}
 
+				@Override
 				public void onCompleted() {
+					responseObserver.onNext(Error.newBuilder().setEc(-5).build());
 					responseObserver.onCompleted();
 				}
 
@@ -111,7 +116,7 @@ public class ChunkGrpcServer {
 				 */
 				FileInfo fi = db.getFileInfo(request.getFilename());
 				if (fi == null) {
-					response = builder.setEc(-1).build();
+					response = builder.setEc(-2).build();
 				} else {
 					response = builder.setEc(0).addFilesinfo(fi).build();
 				}
@@ -146,7 +151,7 @@ public class ChunkGrpcServer {
 				 */
 				NodeInfo seed = db.getNodeInfo(request);
 				if (seed == null) {
-					response = builder.setEc(-1).build();
+					response = builder.setEc(-2).build();
 				} else {
 					response = builder.setEc(0).addSeeders(seed).build();
 				}

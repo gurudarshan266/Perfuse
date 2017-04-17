@@ -6,20 +6,24 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.logging.Logger;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import chunkserver.DefinesProto.ChunkInfo;
 import chunkserver.DefinesProto.FileInfo;
 import chunkserver.DefinesProto.FileInfo.Builder;
 import chunkserver.DefinesProto.NodeInfo;
+import chunkserver.DefinesProto.Seeders;
 import chunkserver.RequestProto.Request;
 
 /* This class has methods to create/modify/delete db tables*/
@@ -48,13 +52,13 @@ public class DbUtil {
 
 	public void createChunkTable() {
 		String query;
-		query = "CREATE TABLE CHUNKS (" + "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+		query = "CREATE TABLE CHUNKS (" + "ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
 				+ "HASH VARCHAR(40) NOT NULL," + "FILENAME VARCHAR(255) NOT NULL," + "OFFSET INT NOT NULL,"
 				+ "LEN INT NOT NULL," + "SEEDERS VARCHAR(255) NOT NULL);";
 		try {
 			Statement statement = connect.createStatement();
-			ResultSet rs = statement.executeQuery(query);
-			logger.info(rs.toString());
+			statement.executeUpdate(query);
+			logger.info(query);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			// close();
@@ -65,13 +69,13 @@ public class DbUtil {
 
 	public void createFileTable() {
 		String query;
-		query = "CREATE TABLE FILEINFO (" + "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
-				+ "FILENAME VARCHAR(255) NOT NULL," + "SIZE INT NOT NULL," + "LAST_MODIFIED DATE NOT NULL,"
+		query = "CREATE TABLE FILEINFO (" + "ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+				+ "FILENAME VARCHAR(255) NOT NULL," + "SIZE INT NOT NULL," + "LAST_MODIFIED TIMESTAMP NOT NULL,"
 				+ "DIRECTORY TINYINT NOT NULL," + "PARENT VARCHAR(255) NOT NULL);";
 		try {
 			Statement statement = connect.createStatement();
-			ResultSet rs = statement.executeQuery(query);
-			logger.info(rs.toString());
+			statement.executeUpdate(query);
+			logger.info(query);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			// close();
@@ -81,13 +85,13 @@ public class DbUtil {
 
 	public void createNodeTable() {
 		String query;
-		query = "CREATE TABLE NODEINFO (" + "ID INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
+		query = "CREATE TABLE NODEINFO (" + "ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
 				+ "NAME VARCHAR(255) NOT NULL," + "IP VARCHAR(255) NOT NULL," + "PORT INT NOT NULL,"
-				+ "CAPACITY INT NOT NULL," + "VIVALDIMETRIC INT NOT NULL," + "UPTIME DATE NOT NULL);";
+				+ "CAPACITY INT NOT NULL," + "VIVALDIMETRIC INT NOT NULL," + "UPTIME TIMESTAMP NOT NULL);";
 		try {
 			Statement statement = connect.createStatement();
-			ResultSet rs = statement.executeQuery(query);
-			logger.info(rs.toString());
+			statement.executeUpdate(query);
+			logger.info(query);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			// close();
@@ -103,9 +107,9 @@ public class DbUtil {
 			pstmt.setInt(3, seed.getPort());
 			pstmt.setInt(4, 100);
 			pstmt.setInt(5, seed.getVivaldimetric());
-			pstmt.setDate(6, (java.sql.Date)new Date());
+			pstmt.setTimestamp(6, new Timestamp(new Date().getTime()));
 			pstmt.executeUpdate();
-			logger.info(pstmt.getResultSet().toString());
+			logger.info(pstmt.toString());
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -124,10 +128,10 @@ public class DbUtil {
 		try {
 			Statement statement = connect.createStatement();
 			ResultSet rs = statement.executeQuery(query);
-			logger.info(rs.toString());
+			logger.info(query);
 			if (!rs.next()) {
 				query = "SELECT * FROM NODEINFO ORDER BY CAPACITY LIMIT 1";
-				statement.executeQuery(query);
+				rs = statement.executeQuery(query);
 				if (!rs.next()) {
 					return null;
 				} else {
@@ -151,8 +155,23 @@ public class DbUtil {
 		Statement stmt;
 		try {
 			stmt = connect.createStatement();
-			ResultSet rs = stmt.executeQuery(query);
-			logger.info(rs.toString());
+			stmt.executeUpdate(query);
+			logger.info(query);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			// close();
+			e.printStackTrace();
+		}
+
+	}
+	
+	public void deleteNodeTable() {
+		String query = "DROP TABLE IF EXISTS NODEINFO";
+		Statement stmt;
+		try {
+			stmt = connect.createStatement();
+			stmt.executeUpdate(query);
+			logger.info(query);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			// close();
@@ -166,8 +185,8 @@ public class DbUtil {
 		Statement stmt;
 		try {
 			stmt = connect.createStatement();
-			ResultSet rs = stmt.executeQuery(query);
-			logger.info(rs.toString());
+			stmt.executeUpdate(query);
+			logger.info(query);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			// close();
@@ -175,26 +194,45 @@ public class DbUtil {
 		}
 
 	}
+	
+	public String getBaseName(String fullpath) {
+		String[] tokens = fullpath.split(".+?/(?=[^/]+$)");
+		return tokens[1];
+	}
+	
+	public String getParentName(String fullpath) {
+		String[] tokens = fullpath.split(".+?/(?=[^/]+$)");
+		return tokens[0];
+	}
 
 	public void addChunks(ChunkInfo chunk) {
 		String query = "INSERT INTO CHUNKS VALUES (default, ?, ?, ?, ?, ?) ";
-		Gson gson = new Gson();
-		String seeders = gson.toJson(chunk.getSeedersList());
+//		Gson gson = new Gson();
+//		String seeders = gson.toJson(chunk.getSeedersList());
+		String filename = chunk.getFilename();
+//		System.out.println("Received Chunk" + seeders.length());
+		chunkserver.DefinesProto.Seeders.Builder builder = Seeders.newBuilder();
+		builder.addAllSeeders(chunk.getSeedersList());
+		Seeders seeders = builder.build();
 		try {
 			PreparedStatement pstmt = connect.prepareStatement(query);
 			pstmt.setString(1, chunk.getHash());
-			pstmt.setString(2, chunk.getFilename());
+			pstmt.setString(2, filename);
 			pstmt.setInt(3, chunk.getOffset());
 			pstmt.setInt(4, chunk.getLen());
-			pstmt.setString(5, seeders);
+			pstmt.setString(5, new String(seeders.toByteArray()));
 			pstmt.executeUpdate();
-			logger.info(pstmt.getResultSet().toString());
+			logger.info(pstmt.toString());
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 	}
+	
+//	public void updateFileInfo(String filename) {
+//		
+//	}
 
 	public void addFileInfo(FileInfo fi) {
 		String query = "INSERT INTO FILEINFO VALUES (default, ?, ?, ?, ?, ?) ";
@@ -202,12 +240,12 @@ public class DbUtil {
 			PreparedStatement pstmt = connect.prepareStatement(query);
 			pstmt.setString(1, fi.getFilename());
 			pstmt.setInt(2, fi.getSize());
-			pstmt.setDate(3, (java.sql.Date) sdf.parse(fi.getLastmodified()));
+			pstmt.setTimestamp(3, new Timestamp(sdf.parse(fi.getLastmodified()).getTime()));
 			// pstmt.setInt(4, chunk.getLength());
 			pstmt.setBoolean(4, fi.getIsDir());
 			pstmt.setString(5, fi.getParent());
 			pstmt.executeUpdate();
-			logger.info(pstmt.getResultSet().toString());
+			logger.info(pstmt.toString());
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -220,7 +258,7 @@ public class DbUtil {
 
 	public ArrayList<ChunkInfo> getChunks(String filename) {
 		ArrayList<ChunkInfo> chunklist = new ArrayList<ChunkInfo>();
-		String query = "SELECT * FROM CHUNKS WHERE FILENAME=" + filename + ";";
+		String query = "SELECT * FROM CHUNKS WHERE FILENAME='" + filename + "';";
 		Statement stmt;
 		chunkserver.DefinesProto.ChunkInfo.Builder builder = ChunkInfo.newBuilder();
 		ChunkInfo chunk = null;
@@ -232,20 +270,19 @@ public class DbUtil {
 				return null;
 			} else {
 				do {
-					Gson gson = new Gson();
-					Type nodeinfotype = new TypeToken<ArrayList<NodeInfo>>(){}.getType();
-					ArrayList<NodeInfo> nodeinfolist = gson.fromJson(rs.getString(6), nodeinfotype);
-					
-					for (NodeInfo seeder: nodeinfolist) {
-						builder.addSeeders(seeder);
+					Seeders seeders = Seeders.parseFrom(rs.getString(6).getBytes());
+					for (NodeInfo node : seeders.getSeedersList()) {
+						builder.addSeeders(node);
 					}
 					chunk = builder.setHash(rs.getString(2)).setFilename(rs.getString(3))
 							.setOffset(rs.getInt(4)).setLen(rs.getInt(5)).build();
 					chunklist.add(chunk);
 				} while (rs.next());
 			}
-
 		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidProtocolBufferException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -254,8 +291,9 @@ public class DbUtil {
 
 	public ArrayList<String> getSubDirNames(String dirname) {
 		ArrayList<String> dirlist = new ArrayList<String>();
-		String query = "SELECT FILENAME FROM FILEINFO WHERE PARENT=" + dirname + ";";
+		String query = "SELECT FILENAME FROM FILEINFO WHERE PARENT='" + dirname + "';";
 		Statement stmt;
+		logger.info(query);
 		try {
 			stmt = connect.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
@@ -263,6 +301,7 @@ public class DbUtil {
 			while (rs.next()) {
 				dirlist.add(rs.getString(1));
 			}
+			
 		} catch (SQLException e) {
 			// TODO
 			e.printStackTrace();
@@ -272,9 +311,10 @@ public class DbUtil {
 	
 
 	public FileInfo getFileInfo(String filename) {
-		String query = "SELECT * FROM FILEINFO WHERE FILENAME=" + filename;
+		String query = "SELECT * FROM FILEINFO WHERE FILENAME='" + filename + "';";
 		Statement stmt;
 		Builder builder = FileInfo.newBuilder();
+		logger.info(query);
 		try {
 			stmt = connect.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
@@ -309,24 +349,30 @@ public class DbUtil {
 		// TODO Auto-generated method stub
 		// Some basic tests
 		DbUtil db = new DbUtil();
+		db.deleteChunkTable();
+		db.deleteFileTable();
+		db.deleteNodeTable();
 		db.createFileTable();
 		db.createChunkTable();
 		db.createNodeTable();
 		// db.addFileInfo(fi);
 
-		FileInfo fi = FileInfo.newBuilder().setFilename("/Guru").setIsDir(true).setLastmodified(sdf.format(new Date()))
+		FileInfo fi = FileInfo.newBuilder().setFilename("/Guru").setIsDir(true).setLastmodified(sdf.format(new Timestamp(new Date().getTime())))
 				.setSize(4096).setParent("/").build();
 		FileInfo fi2 = FileInfo.newBuilder().setFilename("/Shravan").setIsDir(true)
-				.setLastmodified(sdf.format(new Date())).setSize(4096).setParent("/").build();
-		FileInfo fi3 = FileInfo.newBuilder().setFilename("ESA").setIsDir(false).setLastmodified(sdf.format(new Date()))
+				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("/").build();
+		FileInfo fi3 = FileInfo.newBuilder().setFilename("/Guru/ESA").setIsDir(false).setLastmodified(sdf.format(new Timestamp(new Date().getTime())))
 				.setSize(1073741824).setParent("/Guru").build();
+		FileInfo fi4 = FileInfo.newBuilder().setFilename("/").setIsDir(true).setLastmodified(sdf.format(new Timestamp(new Date().getTime())))
+				.setSize(4096).setParent("NO_ROOT").build();
 		
-		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.13").setPort(50005).setVivaldimetric(5).build();
+		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.16").setPort(50004).setVivaldimetric(5).build();
 		db.addNodeInfo(seed);
 
 		db.addFileInfo(fi);
 		db.addFileInfo(fi2);
 		db.addFileInfo(fi3);
+		db.addFileInfo(fi4);
 	}
 
 }

@@ -9,9 +9,9 @@ public class DbConnection {
 	private static DbConnection db = null;
 	private DbConnection() {
 		try {
-			Class.forName("com.mysql.jdbc.Driver");
+			Class.forName("com.mysql.cj.jdbc.Driver");
 			connect = DriverManager
-					.getConnection("jdbc:mysql://localhost/feedback?" + "user=shravan" + "&password=abc");
+					.getConnection("jdbc:mysql://localhost:3306/chunkdb", "root", "abc");
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

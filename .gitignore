@@ -31,4 +31,4 @@ Chunkserver/gradle/
 Chunkserver/gradlew
 Chunkserver/gradlew.bat
 Chunkserver/settings.gradle
-
+StorageServer/venv/
