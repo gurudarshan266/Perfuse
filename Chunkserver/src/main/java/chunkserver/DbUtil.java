@@ -245,7 +245,7 @@ public class DbUtil {
 			pstmt.setBoolean(4, fi.getIsDir());
 			pstmt.setString(5, fi.getParent());
 			pstmt.executeUpdate();
-			logger.info(pstmt.toString());
+			logger.info(query);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -373,6 +373,36 @@ public class DbUtil {
 		db.addFileInfo(fi2);
 		db.addFileInfo(fi3);
 		db.addFileInfo(fi4);
+	}
+
+	public int updateFileInfo(Request request) {
+		String filename = request.getFilename();
+		FileInfo fi = getFileInfo(filename);
+		String query = null;
+		if (fi == null) {
+			addFileInfo(request.getFileinfo());
+		} else {
+			fi = request.getFileinfo();
+			query = "UPDATE FILEINFO SIZE = ?, LAST_MODIFIED = ?, DIRECTORY = ?, PARENT, = ? " 
+					+ "WHERE FILENAME='" + filename + "';";
+			try {
+				PreparedStatement pstmt = connect.prepareStatement(query);
+				pstmt.setInt(1, fi.getSize());
+				pstmt.setTimestamp(2, new Timestamp(sdf.parse(fi.getLastmodified()).getTime()));
+				pstmt.setBoolean(3, fi.getIsDir());
+				pstmt.setString(4, fi.getParent());
+				pstmt.executeUpdate();
+				logger.info(query);
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+		}
+		return 0;
 	}
 
 }

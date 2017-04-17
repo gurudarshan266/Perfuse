@@ -171,6 +171,12 @@ public class ChunkGrpcServer {
 				}
 				response = builder.setEc(0).build();
 				break;
+			case UPDATEFILEINFO:
+				/*
+				 * Add or Update file info in the FILEINFO Table
+				 */
+				int rc = db.updateFileInfo(request);
+				response=builder.setEc(rc).build();
 			case NOP:
 				break;
 			default:
