@@ -5,15 +5,20 @@ option java_package = "chunkserver";
 option java_outer_classname = "DefinesProto";
 
 enum MethodType {
-    GETFILEINFO = 0;
-    GETCHUNKDATA = 1;
-    GETHASHES = 2;
-    WRITECHUNK = 3;
-    NOP = 4;
-    VIVALDIUPDATE = 5;
-    GETDIRLIST = 6;
-    WRITEHASHES = 7;
-    UPDATEFILEINFO = 8;
+	NOP = 0;
+
+	GETFILEINFO = 1;
+	UPDATEFILEINFO = 2;
+	REMOVEFILE = 3;
+	GETDIRLIST = 4;
+
+	GETCHUNKDATA = 5;
+	WRITECHUNK = 6;
+
+	GETHASHES = 7;
+	WRITEHASHES = 8;
+
+	VIVALDIUPDATE = 9;
 }
 
 message FileInfo {

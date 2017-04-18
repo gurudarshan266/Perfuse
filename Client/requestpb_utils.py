@@ -49,6 +49,7 @@ def request_update_fileinfo(reqid,filenm,sz,m_time,is_dir):
     r.reqid = reqid
     r.method = UPDATEFILEINFO
     r.filename = filenm
+    r.parent = get_parent_dir(filenm)
 
     finfo = r.fileinfo
     finfo.filename = filenm
@@ -57,3 +58,19 @@ def request_update_fileinfo(reqid,filenm,sz,m_time,is_dir):
     finfo.is_dir = is_dir
     finfo.parent = get_parent_dir(filenm)
     return r
+
+def request_remove_file(reqid,filenm,is_dir):
+    r = Request()
+    r.reqid = reqid
+    r.method = REMOVEFILE
+    r.filename = filenm
+    r.parent = get_parent_dir(filenm)
+
+    finfo = r.fileinfo
+    finfo.filename = filenm
+    finfo.size = 0
+    finfo.lastmodified = 0.0
+    finfo.is_dir = is_dir
+    finfo.parent = get_parent_dir(filenm)
+
+

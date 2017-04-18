@@ -112,6 +112,13 @@ def get_chunk_hash(chunks_list, offset):
             return c[HASH_INDEX]
     return None
 
+# Get the appropriate chunk ID in the table for the given offset
+def get_chunk_id(chunks_list, offset):
+    for c in chunks_list:
+        if(offset >= c[OFFSET_INDEX] and offset<c[OFFSET_INDEX]+c[LEN_INDEX]):
+            return c[ID_INDEX]
+    return None
+
 def to_epoch(s):
     unix_epoch = datetime.datetime(1970, 1, 1)
 

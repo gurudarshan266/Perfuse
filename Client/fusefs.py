@@ -182,7 +182,6 @@ class Loopback(LoggingMixIn, Operations):
 
 
 
-    #TODO: Clear off the file entries from the table
     def release(self, path, fh):
         db = chunk_database()
 
@@ -211,14 +210,20 @@ class Loopback(LoggingMixIn, Operations):
 
             del self.tmp_files[path]
 
+        # Clear off the hash entries of the file from the table
         db.delete_chunks_for_file(path)
         return 0
         # return os.close(fh)
 
+    #TODO: use update file info to rename a file
     def rename(self, old, new):
         return os.rename(old, self.root + new)
 
-    rmdir = os.rmdir
+    def rmdir(self, path):
+        self.cnt = self.cnt + 1
+        r=request_remove_file(self.cnt,path, True)
+        resp = self.stub.GetResponse(r)
+
 
     def statfs(self, path):
         stv = os.statvfs(path)
@@ -235,7 +240,13 @@ class Loopback(LoggingMixIn, Operations):
         with open(path, 'r+') as f:
             f.truncate(length)
 
-    unlink = os.unlink
+    # unlink = os.unlink
+    def unlink(self, path):
+        self.req_cnt = self.req_cnt + 1
+        r = request_remove_file(self.req_cnt,path,False)
+        resp = self.stub.GetResponse(r)
+
+
     utimens = os.utime
 
     #take care of append test cases
