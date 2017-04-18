@@ -198,7 +198,7 @@ class Loopback(LoggingMixIn, Operations):
             req = request_write_chunk(self.req_cnt,path)
             resp = self.stub.GetResponse(req)
 
-            #Send all teh chunk data associated with the file to a storage server
+            #Send all the chunk data associated with the file to a storage server
             push_chunks_to_storage_server(resp,path)
 
             # Send update to chunkserver about file info change
@@ -237,8 +237,56 @@ class Loopback(LoggingMixIn, Operations):
         return os.symlink(source, target)
 
     def truncate(self, path, length, fh=None):
-        with open(path, 'r+') as f:
-            f.truncate(length)
+        #If its a temporary file, truncate the tmp file
+        if path in self.tmp_files:
+            with open(self.tmp_files[path], 'r+') as f:
+                f.truncate(length)
+
+        else:
+            # Get the file info to know if the given length is smaller or larger than the file
+            self.cnt += 1
+            r = request_file_info()
+            resp = self.stub.GetResponse(r)
+
+            # If the file is not found raise appropriate errno
+            if resp.ec < 0:
+                raise FuseOSError(-1*resp.ec)
+
+            fileinfo = resp.filesinfo[0]
+            db = chunk_database()
+
+            # if the new length is same as old length,
+            # return without proceeding forward
+            if length == fileinfo.size:
+                return 0
+
+            elif length<fileinfo.size:
+                #get the row corresponding to the truncation length
+                c = get_chunk_list(db,path,length,0)[0]
+
+                #Remove the hashes after the new length
+                db.remove_hashes_after_offset(path,length)
+
+                #Download the chunk data if already not present
+                get_chunk_data(hash=c[HASH_INDEX],offset=c[OFFSET_INDEX],len=0,
+                               ssip=c[SSIP_INDEX],ssport=c[SSPORT_INDEX],filenm=path)
+
+                #Send request to remove the file on chunk server
+                self.req_cnt += 1
+                r2 = request_remove_file(self.req_cnt,path,is_dir=False)
+                resp2 = self.stub.GetResponse(r2)
+
+                #Truncate the chunk file
+                with open(CHUNKS_DIR + c[HASH_INDEX],"r+") as f:
+                    #Truncate the chunk
+                    f.truncate(length-c[OFFSET_INDEX])
+                    data = f.read()
+                    #Compute the new hash
+                    newhash = compute_hash(data)
+                    #Upodate the hash in the table
+                    db.update_hash(path,newhash,c[ID_INDEX])
+
+            #TODO: if length > fileinfo.size
 
     # unlink = os.unlink
     def unlink(self, path):
@@ -264,7 +312,7 @@ class Loopback(LoggingMixIn, Operations):
 
             # Get the row corresponding to the offset
             # len=0 so that no data is returned. Just used for downloading
-            chunk_row = get_chunk_list(db, path, offset, 0)
+            chunk_row = get_chunk_list(db, path, offset, 0)[0]
             hash = chunk_row[HASH_INDEX]
 
             # If the chunk is not in cache, download the chunk file to local cache

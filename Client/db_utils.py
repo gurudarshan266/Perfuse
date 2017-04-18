@@ -97,6 +97,22 @@ class chunk_database:
         except sqlite3.Error, e:
             print "Error : %s" % e.args[0]
 
+    def remove_hashes_after_offset(self,filenm,offset):
+        sql_query = "DELETE FROM CHUNKS WHERE FILENAME='%s' AND OFFSET>%d;" % (filenm,offset)
+        try:
+            self.cur.execute(sql_query)
+            self.con.commit()
+        except sqlite3.Error, e:
+            print "Error : %s" % e.args[0]
+
+    def update_hash(self,filenm,hash,id):
+        sql_query = "UPDATE CHUNKS SET HASH = '%s' WHERE ID = %d AND FILENAME = '%s';" % (hash,id,filenm)
+        try:
+            self.cur.execute(sql_query)
+            self.con.commit()
+        except sqlite3.Error, e:
+            print "Error : %s" % e.args[0]
+
 
     def close(self):
         self.con.close()
