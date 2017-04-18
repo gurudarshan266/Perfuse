@@ -51,9 +51,11 @@ class chunk_database:
         return rows
 
     def delete_chunks_for_file(self, filenm):
+        print "Deleting %s hashes from DB"%filenm
         sql_query = "DELETE FROM CHUNKS WHERE FILENAME='%s';" % filenm
         try:
             self.cur.execute(sql_query)
+            self.con.commit()
         except sqlite3.Error, e:
             print "Error : %s" % e.args[0]
 
@@ -71,6 +73,7 @@ class chunk_database:
         sql_query = "UPDATE CHUNKS SET INCACHE=%d WHERE HASH='%s';"%(value,hash)
         try:
             self.cur.execute(sql_query)
+            self.con.commit()
         except sqlite3.Error, e:
             print "Error : %s" % e.args[0]
 
@@ -90,6 +93,7 @@ class chunk_database:
         sql_query = "UPDATE CHUNKS SET OFFSET = OFFSET + %d WHERE FILENAME = '%s' AND OFFSET > %d;" % (delta, filenm,start)
         try:
             self.cur.execute(sql_query)
+            self.con.commit()
         except sqlite3.Error, e:
             print "Error : %s" % e.args[0]
 

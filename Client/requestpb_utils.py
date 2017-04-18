@@ -11,7 +11,7 @@ def get_parent_dir(filenm):
 def request_file_hashes(reqid, filenm):
     r = Request()
     r.reqid = reqid
-    r.method = GETHASHES;
+    r.method = GETHASHES
     r.filename = filenm
     r.parent = get_parent_dir(filenm)
     return r

@@ -40,11 +40,11 @@ class storageserver(StorageServerServicer):
                 with open(CHUNKS_DIR+chunkinfodata.chunkinfo.hash,"w+") as f:
                     f.write(chunkinfodata.chunkdata.data)
 
-                # TODO: Verify if this change is reflected in the other iterator
-                seeder = chunkinfodata.chunkinfo.seeders.add()
-                seeder.ip = STORAGE_SERVER_IP
-                seeder.port = int(STORAGE_SERVER_PORT)
-                seeder.vivaldimetric = chunkinfodata.chunkinfo.seeders[0].vivaldimetric
+            # TODO: Verify if this change is reflected in the other iterator
+            seeder = chunkinfodata.chunkinfo.seeders.add()
+            seeder.ip = STORAGE_SERVER_IP
+            seeder.port = int(STORAGE_SERVER_PORT)
+            seeder.vivaldimetric = chunkinfodata.chunkinfo.seeders[0].vivaldimetric
 
             c_list.append(chunkinfodata.chunkinfo)
 

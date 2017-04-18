@@ -43,12 +43,13 @@ def get_chunk_list(db, filenm, offset, len):
 
 #TODO:Get the SS IP based on the lowest vivaldi metric
 # Reads chunk from the local cache or downloads it and reads it
-def get_chunk_data(hash,offset,len,ssip,ssport):
+def get_chunk_data(hash,offset,len,ssip,ssport,filenm):
     db = chunk_database()
 
     # If the chunk is already in cache, no need to fetch it
     if db.is_incache(hash):
         data = ''
+        print "Data present in local cache"
         with open(CHUNKS_DIR+hash,'r') as f:
             f.seek(offset)
             data = f.read(len)
@@ -61,16 +62,18 @@ def get_chunk_data(hash,offset,len,ssip,ssport):
 
         # Create CHunkInfo Object to be passed to the storage server
         chunk_info = ChunkInfo()
+        chunk_info.filename = filenm
         chunk_info.hash = hash
         chunk_info.offset = offset
         chunk_info.len = len
 
         # Get ChunkData from the storage server for the requested chunk
         chunk_data = ss_stub.GetChunkData(chunk_info).data
+        print "Downloaded %d from %s"%(chunk_info.len,ssip)
 
         #TODO: If no data is returned. Get the storage server node location from the chunk server
-        if not chunk_data.data:
-            pass
+        # if not chunk_data:
+        #     pass
 
         # Update the in-cache attribute in the table
         db.set_incache(hash,True)
@@ -96,7 +99,7 @@ def get_chunks_data(chunks_list, offset, len):
         if(start>end):
             break
         len_chunk = min(c[OFFSET_INDEX]+c[LEN_INDEX],end+1)-start
-        s = get_chunk_data(c[HASH_INDEX],start-c[OFFSET_INDEX],len_chunk,c[SSIP_INDEX],c[SSPORT_INDEX])
+        s = get_chunk_data(c[HASH_INDEX],start-c[OFFSET_INDEX],len_chunk,c[SSIP_INDEX],c[SSPORT_INDEX],c[FILENAME_INDEX])
         start = c[OFFSET_INDEX]+c[LEN_INDEX]
         data = data + s
     return data

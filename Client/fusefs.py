@@ -135,7 +135,9 @@ class Loopback(LoggingMixIn, Operations):
         print(req)
         resp = self.stub.GetResponse(req)
         print(resp)
-        add_file_hashes_to_db(self.db,resp)
+        db = chunk_database()
+        add_file_hashes_to_db(db,resp)
+        return 4
 
 
 
