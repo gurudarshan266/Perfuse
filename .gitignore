@@ -15,8 +15,15 @@ Common/MsgTemplate/src/
 
 # IDE files #
 Client/.idea/
+StorageServer/.idea/
+Client/fusepy/
+Client/scaffold
 
 *.db
+
+Client/chunks/
+Client/tmp/
+StorageServer/chunks/
 
 .metadata/
 Chunkserver/.classpath

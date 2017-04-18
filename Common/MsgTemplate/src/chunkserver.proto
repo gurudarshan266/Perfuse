@@ -1,9 +1,0 @@
-syntax="proto2";
-package perfuse;
-
-import "response.proto";
-import "request.proto";
-
-service ChunkServer {
-	rpc GetResponse(Request) returns (Response) {}
-}
