@@ -296,7 +296,6 @@ public class DbUtil {
 		ArrayList<ChunkInfo> chunklist = new ArrayList<ChunkInfo>();
 		String query = "SELECT * FROM CHUNKS WHERE FILENAME='" + filename + "';";
 		Statement stmt;
-		chunkserver.DefinesProto.ChunkInfo.Builder builder = ChunkInfo.newBuilder();
 		ChunkInfo chunk = null;
 		logger.info(query);
 		try {
@@ -306,7 +305,8 @@ public class DbUtil {
 				return null;
 			} else {
 				do {
-					String[] nodeids = rs.getString(6).split("\\s+");
+					chunkserver.DefinesProto.ChunkInfo.Builder builder = ChunkInfo.newBuilder();
+					String[] nodeids = rs.getString(6).trim().split("\\s+");
 					for (String id : nodeids) {
 						int idint = Integer.parseInt(id);
 						NodeInfo nodeinfo = getNodeFromId(idint);
