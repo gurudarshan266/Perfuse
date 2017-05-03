@@ -178,6 +178,19 @@ public class ChunkGrpcServer {
 				response=builder.setEc(rc).build();
 			case NOP:
 				break;
+				
+			case REMOVEFILE:
+				/*
+				 * Called for rmdir or rm operations
+				 */
+				boolean is_dir = request.getFileinfo().getIsDir();
+				if (is_dir) {
+					rc = db.removeDir(request);
+				} else {
+					rc = db.removeFile(request);
+				}
+				response=builder.setEc(rc).build();
+				break;
 			default:
 				System.out.println("Invalid message type");
 				break;

@@ -1,7 +1,5 @@
 package chunkserver;
 
-import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -404,7 +402,7 @@ public class DbUtil {
 				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("NO_ROOT")
 				.build();
 
-		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.16").setPort(50004).setVivaldimetric(5).build();
+		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.6").setPort(50004).setVivaldimetric(5).build();
 		db.addNodeInfo(seed);
 
 		db.addFileInfo(fi);
@@ -444,4 +442,84 @@ public class DbUtil {
 		return 0;
 	}
 
+	public int addDir(Request request) {
+		String filename = request.getFileinfo().getFilename();
+		String parent = request.getFileinfo().getParent();
+		String query = "SELECT * FROM FILEINFO WHERE FILENAME='" + parent + "' AND DIRECTORY=TRUE;";
+		Statement stmt;
+		try {
+			stmt = connect.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs.next()) {
+				/*Parent exists*/
+				this.addFileInfo(request.getFileinfo());
+			} else {
+				return -1;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return 0;
+		
+	}
+	public int removeDir(Request request) {
+		// TODO Auto-generated method stub
+		
+		String filename = request.getFileinfo().getFilename();
+		String query = "SELECT FILENAME FROM FILEINFO WHERE PARENT='" + filename + "';";
+		logger.info(query);
+		try {
+			Statement stmt = connect.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs.next()){
+				return -39;   /*ENOTEMPTY error code*/
+			} else {
+				//removeChunks(filename);
+				query = "DELETE FROM FILEINFO WHERE FILENAME='" + filename + "';";
+				logger.info(query);
+				stmt.executeUpdate(query);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
+	
+	public int removeFile(Request request) {
+		// TODO Auto-generated method stub
+		String filename = request.getFileinfo().getFilename();
+		removeChunks(filename);
+		String query = "DELETE FROM FILEINFO WHERE FILENAME='" + filename + "';";
+		logger.info(query);
+		Statement stmt;
+		try {
+			stmt = connect.createStatement();
+			stmt.executeUpdate(query);
+
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+
+	private void removeChunks(String filename) {
+		// TODO Auto-generated method stub
+		String query = "DELETE FROM CHUNKS WHERE FILENAME='" + filename + "';";
+		logger.info(query);
+		Statement stmt;
+		try {
+			stmt = connect.createStatement();
+			stmt.executeUpdate(query);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	
 }
