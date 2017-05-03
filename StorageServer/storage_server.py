@@ -26,7 +26,7 @@ class storageserver(StorageServerServicer):
         # iter1, iter2 = itertools.tee(request_iterator)
         iter2 = request_iterator
         print "In Push Chunk Data"
-        print request_iterator
+        # print request_iterator
 
         c_list = []
 
@@ -53,7 +53,7 @@ class storageserver(StorageServerServicer):
         channel = grpc.insecure_channel(CHUNK_SERVER_IP + ":" + CHUNK_SERVER_PORT)
         stub = chunkserver_pb2_grpc.ChunkServerStub(channel)
 
-        print c_list
+        # print c_list
         x=stub.RouteUpdate(iter(c_list))
         print "got response from server"
         ec = Error()
