@@ -130,12 +130,14 @@ class chunk_database:
     def close(self):
         self.con.close()
 
-# init_db()
-# mydb = chunk_database()
-# mydb.create_table()
-# print(mydb.get_all_rows())
-# print(mydb.get_all_rows())
-# mydb.close()
+if __name__ == '__main__':
+    # init_db()
+    # mydb = chunk_database()
+    # mydb.create_table()
+    # print(mydb.get_all_rows())
+    # print(mydb.get_all_rows())
+    # mydb.close()
 
-# mydb.add_chunk("hello","a.txt",0,10,"127.0.0.1",50004)
-# print(mydb.get_file_size("a.txt"))
+    # mydb.add_chunk("hello","a.txt",0,10,"127.0.0.1",50004)
+    # print(mydb.get_file_size("a.txt"))
+    pass

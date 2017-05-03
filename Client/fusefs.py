@@ -269,6 +269,8 @@ class Loopback(LoggingMixIn, Operations):
         return os.symlink(source, target)
 
     def truncate(self, path, length, fh=None):
+        print("Truncating %s to %d bytes"%(path,length))
+
         #If its a temporary file, truncate the tmp file
         if path in self.tmp_files:
             with open(self.tmp_files[path], 'r+') as f:
@@ -279,8 +281,9 @@ class Loopback(LoggingMixIn, Operations):
             # return 0
             # Get the file info to know if the given length is smaller or larger than the file
             self.req_cnt += 1
-            r = request_file_info()
+            r = request_file_info(self.req_cnt,path)
             resp = self.stub.GetResponse(r)
+            print(resp)
 
             # If the file is not found raise appropriate errno
             if resp.ec < 0:
@@ -307,7 +310,7 @@ class Loopback(LoggingMixIn, Operations):
 
                 # Copy the contents of the chunk file into a new file
                 new_chunknm = CHUNKS_DIR + c[HASH_INDEX] + ".cp"
-                copyfile(new_chunknm, CHUNKS_DIR + c[HASH_INDEX])
+                copyfile(CHUNKS_DIR + c[HASH_INDEX], new_chunknm)
 
                 # Truncate the chunk file
                 newhash=""
@@ -327,6 +330,8 @@ class Loopback(LoggingMixIn, Operations):
 
             #TODO: if length > fileinfo.size
 
+            return 0
+            #TODO: Check if close() is called after truncate
             # Send request to remove the file on chunk server
             self.req_cnt += 1
             r2 = request_remove_file(self.req_cnt, path, is_dir=False)
@@ -370,10 +375,12 @@ class Loopback(LoggingMixIn, Operations):
 
     # TODO: take care of append test cases
     def write(self, path, data, offset, fh):
+        print("File = %s | offset = %d"%(path,offset))
 
+        # TODO: write w.r.t to the old offset
         # If the file is newly created, directly write to the file
         if path in self.tmp_files:
-            with open(self.tmp_files[path],'w') as f:
+            with open(self.tmp_files[path],'r+') as f:
                 f.seek(offset)
                 f.write(data)
 
@@ -402,18 +409,22 @@ class Loopback(LoggingMixIn, Operations):
 
             # Copy the contents of the chunk file into a new chunk file
             new_chunknm = CHUNKS_DIR + chunk_row[HASH_INDEX] + ".cp"
-            copyfile(new_chunknm, CHUNKS_DIR + chunk_row[HASH_INDEX])
+            copyfile(CHUNKS_DIR + chunk_row[HASH_INDEX],new_chunknm)
 
             # Write data to the copied chunk file
             newhash = ""
-            data=""
-            with open(new_chunknm,'w') as f:
+            data2=""
+            with open(new_chunknm,'r+') as f:
                 offset_in_chunk = offset - chunk_row[OFFSET_INDEX]
                 f.seek(offset_in_chunk)
                 f.write(data)
+                f.flush()
+                f.seek(0)
                 data2 = f.read()
+                print("New data in chunk = %s"%data2)
                 # Compute the new hash
                 newhash = compute_hash(data2)
+                print ("New hash = %s"%newhash)
                 # Update the hash in the table
                 st = os.lstat(new_chunknm)
                 new_chunk_len = st.st_size
