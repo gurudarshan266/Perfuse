@@ -78,7 +78,7 @@ def get_chunk_iterator(chunks_sql):
         #Create ChunkInfoData object to send to Storage server
         # chunk_info_data.chunkdata = c_data
 
-        print chunk_info_data
+        #print chunk_info_data
         yield chunk_info_data
         time.sleep(0.5)
 

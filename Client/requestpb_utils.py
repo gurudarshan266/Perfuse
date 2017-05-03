@@ -2,6 +2,7 @@ from request_pb2 import *
 from defines_pb2 import *
 import os.path
 from db_utils import *
+from file_splicer_utils import *
 
 def get_parent_dir(filenm):
     if filenm=='/':
@@ -69,8 +70,10 @@ def request_remove_file(reqid,filenm,is_dir):
     finfo = r.fileinfo
     finfo.filename = filenm
     finfo.size = 0
-    finfo.lastmodified = 0.0
+    finfo.lastmodified = to_utc(1492144252)
     finfo.is_dir = is_dir
     finfo.parent = get_parent_dir(filenm)
+    mtime = 1492144252
+    return r
 
 

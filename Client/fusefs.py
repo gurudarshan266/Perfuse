@@ -68,6 +68,7 @@ class Loopback(LoggingMixIn, Operations):
         return os.fsync(fh)
 
     def fsync(self, path, datasync, fh):
+        return 0
         if datasync != 0:
             return os.fdatasync(fh)
         else:
@@ -191,14 +192,14 @@ class Loopback(LoggingMixIn, Operations):
             # creates chunks and adds to DB.
             splice_file(db, filenm, pseudofilenm=path, write_to_chunkfile=True)
 
-            #Use the written chunks data while calling write chunk data
+            # Use the written chunks data while calling write chunk data
             self.req_cnt = self.req_cnt + 1
 
             # Get the Storage Server's details for wrting the data
             req = request_write_chunk(self.req_cnt,path)
             resp = self.stub.GetResponse(req)
 
-            #Send all the chunk data associated with the file to a storage server
+            # Send all the chunk data associated with the file to a storage server
             push_chunks_to_storage_server(resp,path)
 
             # Send update to chunkserver about file info change
@@ -215,14 +216,16 @@ class Loopback(LoggingMixIn, Operations):
         return 0
         # return os.close(fh)
 
-    #TODO: use update file info to rename a file
+    # TODO: use update file info to rename a file
     def rename(self, old, new):
         return os.rename(old, self.root + new)
 
     def rmdir(self, path):
-        self.cnt = self.cnt + 1
-        r=request_remove_file(self.cnt,path, True)
+        self.req_cnt += 1
+        r=request_remove_file(self.req_cnt,path, True)
         resp = self.stub.GetResponse(r)
+        print(resp)
+        return resp.ec
 
 
     def statfs(self, path):
@@ -243,8 +246,9 @@ class Loopback(LoggingMixIn, Operations):
                 f.truncate(length)
 
         else:
+            return 0
             # Get the file info to know if the given length is smaller or larger than the file
-            self.cnt += 1
+            self.req_cnt += 1
             r = request_file_info()
             resp = self.stub.GetResponse(r)
 
@@ -292,7 +296,10 @@ class Loopback(LoggingMixIn, Operations):
     def unlink(self, path):
         self.req_cnt = self.req_cnt + 1
         r = request_remove_file(self.req_cnt,path,False)
+        print(r)
         resp = self.stub.GetResponse(r)
+        print(resp)
+        return resp.ec
 
 
     utimens = os.utime
