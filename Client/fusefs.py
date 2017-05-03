@@ -13,6 +13,7 @@ from os.path import realpath
 from sys import argv, exit
 from threading import Lock
 from stat import *
+from shutil import copyfile
 
 # from fusepy.fuse import FUSE, FuseOSError, Operations, LoggingMixIn
 from fusepy.fuse import *
@@ -123,10 +124,16 @@ class Loopback(LoggingMixIn, Operations):
         return os.link(source, target)
 
     listxattr = None
-    mkdir = os.mkdir
+    # mkdir = os.mkdir
     mknod = os.mknod
     #open = os.open
 
+    def mkdir(self, path, mode):
+        self.req_cnt = self.req_cnt + 1
+        req = request_add_dir(self.req_cnt,path)
+        resp = self.stub.GetResponse(req)
+        print(resp)
+        return resp.ec
 
 
     def open(self, file, mode):
@@ -195,7 +202,7 @@ class Loopback(LoggingMixIn, Operations):
             # Use the written chunks data while calling write chunk data
             self.req_cnt = self.req_cnt + 1
 
-            # Get the Storage Server's details for wrting the data
+            # Get the Storage Server's details for writing the data
             req = request_write_chunk(self.req_cnt,path)
             resp = self.stub.GetResponse(req)
 
@@ -210,6 +217,28 @@ class Loopback(LoggingMixIn, Operations):
             resp2 = self.stub.GetResponse(req2)
 
             del self.tmp_files[path]
+
+        else:
+            # Send request to remove the file on chunk server
+            self.req_cnt += 1
+            r2 = request_remove_file(self.req_cnt, path, is_dir=False)
+            resp2 = self.stub.GetResponse(r2)
+
+            # Get the Storage Server's details for writing the data
+            self.req_cnt = self.req_cnt + 1
+            req = request_write_chunk(self.req_cnt, path)
+            resp = self.stub.GetResponse(req)
+
+            # Send all the chunk data associated with the file to a storage server
+            push_chunks_to_storage_server(resp, path)
+
+            # Send update to chunkserver about file info change
+            self.req_cnt += 1
+            sz = db.get_file_size(path)
+            mtime = datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S")
+            req2 = request_update_fileinfo(self.req_cnt, path, sz, mtime, is_dir=False)
+            resp2 = self.stub.GetResponse(req2)
+
 
         # Clear off the hash entries of the file from the table
         db.delete_chunks_for_file(path)
@@ -244,9 +273,10 @@ class Loopback(LoggingMixIn, Operations):
         if path in self.tmp_files:
             with open(self.tmp_files[path], 'r+') as f:
                 f.truncate(length)
+            return 0
 
         else:
-            return 0
+            # return 0
             # Get the file info to know if the given length is smaller or larger than the file
             self.req_cnt += 1
             r = request_file_info()
@@ -275,22 +305,56 @@ class Loopback(LoggingMixIn, Operations):
                 get_chunk_data(hash=c[HASH_INDEX],offset=c[OFFSET_INDEX],len=0,
                                ssip=c[SSIP_INDEX],ssport=c[SSPORT_INDEX],filenm=path)
 
-                #Send request to remove the file on chunk server
-                self.req_cnt += 1
-                r2 = request_remove_file(self.req_cnt,path,is_dir=False)
-                resp2 = self.stub.GetResponse(r2)
+                # Copy the contents of the chunk file into a new file
+                new_chunknm = CHUNKS_DIR + c[HASH_INDEX] + ".cp"
+                copyfile(new_chunknm, CHUNKS_DIR + c[HASH_INDEX])
 
-                #Truncate the chunk file
-                with open(CHUNKS_DIR + c[HASH_INDEX],"r+") as f:
-                    #Truncate the chunk
-                    f.truncate(length-c[OFFSET_INDEX])
+                # Truncate the chunk file
+                newhash=""
+                with open(new_chunknm,"r+") as f:
+                    new_len = length-c[OFFSET_INDEX]
+                    # Truncate the chunk
+                    f.truncate(new_len)
                     data = f.read()
-                    #Compute the new hash
+                    # Compute the new hash
                     newhash = compute_hash(data)
-                    #Upodate the hash in the table
-                    db.update_hash(path,newhash,c[ID_INDEX])
+                    # Upodate the hash in the table
+                    db.update_hash(path,newhash,c[ID_INDEX], new_len)
+
+                # Rename the chunk file name to match its hash
+                os.rename(new_chunknm,CHUNKS_DIR+newhash)
+                new_chunknm = CHUNKS_DIR+newhash
 
             #TODO: if length > fileinfo.size
+
+            # Send request to remove the file on chunk server
+            self.req_cnt += 1
+            r2 = request_remove_file(self.req_cnt, path, is_dir=False)
+            resp2 = self.stub.GetResponse(r2)
+
+            # Get the Storage Server's details for writing the data
+            self.req_cnt = self.req_cnt + 1
+            req = request_write_chunk(self.req_cnt, path)
+            resp = self.stub.GetResponse(req)
+
+            # Send all the chunk data associated with the file to a storage server
+            push_chunks_to_storage_server(resp, path)
+
+            # Send update to chunkserver about file info change
+            self.req_cnt += 1
+            st = os.lstat(new_chunknm)
+            mtime = to_utc(st.st_mtime)
+            req2 = request_update_fileinfo(self.req_cnt, path, length, mtime, S_ISDIR(st.st_mode))
+            resp2 = self.stub.GetResponse(req2)
+
+            return 0
+
+
+
+
+
+
+
 
     # unlink = os.unlink
     def unlink(self, path):
@@ -304,7 +368,7 @@ class Loopback(LoggingMixIn, Operations):
 
     utimens = os.utime
 
-    #take care of append test cases
+    # TODO: take care of append test cases
     def write(self, path, data, offset, fh):
 
         # If the file is newly created, directly write to the file
@@ -326,15 +390,35 @@ class Loopback(LoggingMixIn, Operations):
             if chunk_row[INCACHE_INDEX]==0:
                 get_chunk_data(hash,0,0,chunk_row[SSIP_INDEX],chunk_row[SSPORT_INDEX])
 
-            with open(CHUNKS_DIR + chunk_row[HASH_INDEX],'w') as f:
+            # Copy the contents of the chunk file into a new chunk file
+            new_chunknm = CHUNKS_DIR + chunk_row[HASH_INDEX] + ".cp"
+            copyfile(new_chunknm, CHUNKS_DIR + chunk_row[HASH_INDEX])
+
+            # Write data to the copied chunk file
+            newhash = ""
+            data=""
+            with open(new_chunknm,'w') as f:
                 offset_in_chunk = offset - chunk_row[OFFSET_INDEX]
                 f.seek(offset_in_chunk)
                 f.write(data)
+                data2 = f.read()
+                # Compute the new hash
+                newhash = compute_hash(data2)
+                # Update the hash in the table
+                st = os.lstat(new_chunknm)
+                new_chunk_len = st.st_size
+                db.update_hash(path, newhash, chunk_row[ID_INDEX], len(data2))
+
+            # Rename the chunk file name to match its hash
+            os.rename(new_chunknm, CHUNKS_DIR + newhash)
+            new_chunknm = CHUNKS_DIR + newhash
 
             #TODO: Send invalidation message to chunk server
 
             # Update offsets of the chunk hashes following it
             db.update_offsets(path,chunk_row[OFFSET_INDEX],delta=len(data))
+
+
 
         return len(data)
         # with self.rwlock:

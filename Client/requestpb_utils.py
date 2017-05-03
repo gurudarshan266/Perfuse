@@ -76,4 +76,19 @@ def request_remove_file(reqid,filenm,is_dir):
     mtime = 1492144252
     return r
 
+def request_add_dir(reqid,filenm):
+    r = Request()
+    r.reqid = reqid
+    r.method = ADDDIR
+    r.filename = filenm
+    r.parent = get_parent_dir(filenm)
+
+    finfo = r.fileinfo
+    finfo.filename = filenm
+    finfo.size = 4096
+    finfo.lastmodified = to_utc(1492144252)
+    finfo.is_dir = True
+    finfo.parent = get_parent_dir(filenm)
+    return r
+
 

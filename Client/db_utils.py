@@ -105,22 +105,37 @@ class chunk_database:
         except sqlite3.Error, e:
             print "Error : %s" % e.args[0]
 
-    def update_hash(self,filenm,hash,id):
-        sql_query = "UPDATE CHUNKS SET HASH = '%s' WHERE ID = %d AND FILENAME = '%s';" % (hash,id,filenm)
+    def update_hash(self,filenm,hash,id,size):
+        sql_query = "UPDATE CHUNKS SET HASH = '%s', LEN = %d WHERE ID = %d AND FILENAME = '%s';" % (hash,size,id,filenm)
         try:
             self.cur.execute(sql_query)
             self.con.commit()
         except sqlite3.Error, e:
             print "Error : %s" % e.args[0]
 
+    def get_file_size(self,filenm):
+        sql_query = "SELECT SUM(LEN) FROM CHUNKS WHERE FILENAME='%s';"%filenm
+        try:
+            self.cur.execute(sql_query)
+        except sqlite3.Error, e:
+            print "Error : %s" % e.args[0]
+        rows = self.cur.fetchall()
+        if len(rows)==0:
+            return 0
+        val = rows[0][0]
+        return val
+
+
 
     def close(self):
         self.con.close()
 
 # init_db()
-mydb = chunk_database()
-mydb.create_table()
+# mydb = chunk_database()
+# mydb.create_table()
 # print(mydb.get_all_rows())
-# mydb.add_chunk("hello","a.txt",0,10)
 # print(mydb.get_all_rows())
 # mydb.close()
+
+# mydb.add_chunk("hello","a.txt",0,10,"127.0.0.1",50004)
+# print(mydb.get_file_size("a.txt"))
