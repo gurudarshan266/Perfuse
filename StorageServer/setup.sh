@@ -6,6 +6,7 @@ if [ ! -d "chunks" ]; then
 fi
 
 if [ ! -d "venv" ]; then
+    apt-get install python-pip python-dev build-essential 
     python -m pip install --upgrade pip
     python -m pip install virtualenv
     virtualenv venv
