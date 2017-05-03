@@ -380,11 +380,21 @@ class Loopback(LoggingMixIn, Operations):
         # If not in newly created, search in local cache or download from Storage Server
         else:
             db = chunk_database()
+            file_sz = db.get_file_size(path)
+
 
             # Get the row corresponding to the offset
             # len=0 so that no data is returned. Just used for downloading
-            chunk_row = get_chunk_list(db, path, offset, 0)[0]
-            hash = chunk_row[HASH_INDEX]
+            if offset < file_sz:
+                chunk_row = get_chunk_list(db, path, offset, 0)[0]
+                hash = chunk_row[HASH_INDEX]
+
+            # For append cases, always add data to the last chunk
+            else:
+                modified_offset = offset -1
+                chunk_row = get_chunk_list(db, path, modified_offset, 0)[0]
+                hash = chunk_row[HASH_INDEX]
+                print("Appending to file %s"%path)
 
             # If the chunk is not in cache, download the chunk file to local cache
             if chunk_row[INCACHE_INDEX]==0:
