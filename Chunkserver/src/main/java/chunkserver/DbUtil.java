@@ -300,7 +300,7 @@ public class DbUtil {
 			stmt = connect.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 			if (!rs.next()) {
-				return null;
+				return chunklist;
 			} else {
 				do {
 					chunkserver.DefinesProto.ChunkInfo.Builder builder = ChunkInfo.newBuilder();
@@ -402,7 +402,7 @@ public class DbUtil {
 				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("NO_ROOT")
 				.build();
 
-		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.6").setPort(50004).setVivaldimetric(5).build();
+		NodeInfo seed = NodeInfo.newBuilder().setIp("152.46.17.96").setPort(50004).setVivaldimetric(5).build();
 		db.addNodeInfo(seed);
 
 		db.addFileInfo(fi);
@@ -446,13 +446,14 @@ public class DbUtil {
 		String filename = request.getFileinfo().getFilename();
 		String parent = request.getFileinfo().getParent();
 		String query = "SELECT * FROM FILEINFO WHERE FILENAME='" + parent + "' AND DIRECTORY=TRUE;";
+		logger.info(query);
 		Statement stmt;
 		try {
 			stmt = connect.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 			if (rs.next()) {
 				/*Parent exists*/
-				this.addFileInfo(request.getFileinfo());
+				addFileInfo(request.getFileinfo());
 			} else {
 				return -1;
 			}

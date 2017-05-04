@@ -132,6 +132,16 @@ public class ChunkGrpcServer {
 				 * the file Fill in chunkinfo struct Fill in response object
 				 * 
 				 */
+				/* Check if the corresponding file information is present in DB
+				 * 
+				 */
+				//boolean present = 
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				ArrayList<ChunkInfo> hashes = db.getChunks(request.getFilename());
 				if (hashes.size() == 0) {
 					builder.setEc(-1).build();
@@ -139,6 +149,7 @@ public class ChunkGrpcServer {
 					for (int i = 0; i < hashes.size(); i++) {
 						builder.addChunksinfo(hashes.get(i));
 					}
+					
 					response = builder.setEc(0).build();
 				}
 
@@ -191,6 +202,13 @@ public class ChunkGrpcServer {
 				}
 				response=builder.setEc(rc).build();
 				break;
+			case ADDDIR:
+				/*
+				 * Mkdir
+				 */
+				rc = db.addDir(request);
+				break;
+				
 			default:
 				System.out.println("Invalid message type");
 				break;
