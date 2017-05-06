@@ -1,5 +1,10 @@
 #!/bin/sh
 
+if [ ! -d "fusepy" ]; then
+    git clone https://github.com/terencehonles/fusepy
+    touch fusepy/__init__.py
+fi
+
 #Create the chunks directory
 if [ ! -d "chunks" ]; then
     mkdir chunks/
