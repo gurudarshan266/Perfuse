@@ -17,7 +17,8 @@ import chunkserver_pb2_grpc
 
 class storageserver(StorageServerServicer):
 
-    def __init__(self, max_cap):
+    def __init__(self, max_cap,cs_ip):
+        self.chunserver_ip = cs_ip
         self.max_cap = max_cap
 
 
@@ -50,7 +51,7 @@ class storageserver(StorageServerServicer):
 
         # Send update to Chunk Server about the chunk info
         # Node info should be added before sending the update to chunk server
-        channel = grpc.insecure_channel(CHUNK_SERVER_IP + ":" + CHUNK_SERVER_PORT)
+        channel = grpc.insecure_channel(self.chunserver_ip + ":" + CHUNK_SERVER_PORT)
         stub = chunkserver_pb2_grpc.ChunkServerStub(channel)
 
         # print c_list
@@ -91,8 +92,13 @@ class storageserver(StorageServerServicer):
 
 
 if __name__ == '__main__':
+    cs_ip = CHUNK_SERVER_IP
+
+    if len(sys.argv)>=2:
+        cs_ip = sys.argv[1]
+
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    s = storageserver(1*1024*10)
+    s = storageserver(1*1024*10, cs_ip)
 
     add_StorageServerServicer_to_server(s, server)
     server.add_insecure_port('[::]:'+str(STORAGE_SERVER_PORT))

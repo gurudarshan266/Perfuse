@@ -25,14 +25,15 @@ from db_utils import *
 from file_splicer_utils import *
 
 class Loopback(LoggingMixIn, Operations):
-    def __init__(self, root):
+    def __init__(self, root,cs_ip):
+        self.cs_ip = cs_ip
         # self.root = realpath(root)
         self.rwlock = Lock()
 
         self.req_cnt = 0
 
         #Connect to server
-        self.channel = grpc.insecure_channel(constants.CHUNK_SERVER_IP+":"+str(constants.CHUNK_SERVER_PORT))
+        self.channel = grpc.insecure_channel(cs_ip+":"+str(constants.CHUNK_SERVER_PORT))
         self.stub = chunkserver_pb2_grpc.ChunkServerStub(self.channel)
 
         self.tmp_files = {}
@@ -527,7 +528,12 @@ class Loopback(LoggingMixIn, Operations):
 
 if __name__ == '__main__':
 
+    cs_ip = constants.CHUNK_SERVER_IP
+
+    if len(sys.argv)>=2:
+        cs_ip = sys.argv[1]
+
     logging.basicConfig(level=logging.DEBUG)
     root = "."
     mount = "/tmp/fuse2/"
-    fuse = FUSE(Loopback(root), mount, foreground=True)
+    fuse = FUSE(Loopback(root,cs_ip), mount, foreground=True)
