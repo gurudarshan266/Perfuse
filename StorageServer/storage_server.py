@@ -14,6 +14,7 @@ from storageserver_pb2_grpc import *
 from db_utils import chunk_database
 from constants import *
 import chunkserver_pb2_grpc
+from time import time,sleep
 
 class storageserver(StorageServerServicer):
 
@@ -26,29 +27,35 @@ class storageserver(StorageServerServicer):
         db = chunk_database()
         # iter1, iter2 = itertools.tee(request_iterator)
         iter2 = request_iterator
-        print "In Push Chunk Data"
+	start_time = time()
+        #print "In Push Chunk Data"
         # print request_iterator
 
         c_list = []
 
         for chunkinfodata in request_iterator:
             # Copy the chunk data only if it is already not present
+	   # print("\n\n 1.Before checking for chunk in DB @ %s"%str(time()-start_time))
             if not db.is_chunk_present(chunkinfodata.chunkinfo.hash):
                 # Add to DB
                 db.add_chunk(chunkinfodata.chunkinfo.hash,chunkinfodata.chunkinfo.len)
 
+	    #	print("2. After checking for chunk in DB @ %s"%str(time()-start_time))
                 #write to chunk file
                 with open(CHUNKS_DIR+chunkinfodata.chunkinfo.hash,"w+") as f:
                     f.write(chunkinfodata.chunkdata.data)
+	#	print("3. Done with writing chunk @ %s"%str(time()-start_time))
 
             # TODO: Verify if this change is reflected in the other iterator
-            seeder = chunkinfodata.chunkinfo.seeders.add()
-            seeder.ip = STORAGE_SERVER_IP
-            seeder.port = int(STORAGE_SERVER_PORT)
-            seeder.vivaldimetric = chunkinfodata.chunkinfo.seeders[0].vivaldimetric
+#            seeder = chunkinfodata.chunkinfo.seeders[0]#.add()
+ #           seeder.ip = STORAGE_SERVER_IP
+  #          seeder.port = int(STORAGE_SERVER_PORT)
+   #         seeder.vivaldimetric = chunkinfodata.chunkinfo.seeders[0].vivaldimetric
 
+	 #   print("4. Before appending @ %s"%str(time()-start_time))
             c_list.append(chunkinfodata.chunkinfo)
-
+	  #  print("5. After appending @ %s"%str(time()-start_time))
+	#print("6. Done writing to files @ %s"%str(time()-start_time))
         # Send update to Chunk Server about the chunk info
         # Node info should be added before sending the update to chunk server
         channel = grpc.insecure_channel(self.chunserver_ip + ":" + CHUNK_SERVER_PORT)
@@ -56,7 +63,7 @@ class storageserver(StorageServerServicer):
 
         # print c_list
         x=stub.RouteUpdate(iter(c_list))
-        print "got response from server"
+        #print "7. got response from server @ %s"%str(time()-start_time)
         ec = Error()
         ec.ec = 0
         return ec
@@ -106,7 +113,7 @@ if __name__ == '__main__':
     _ONE_DAY_IN_SECONDS = 24*60*60
     try:
         while True:
-            time.sleep(_ONE_DAY_IN_SECONDS)
+            sleep(_ONE_DAY_IN_SECONDS)
     except KeyboardInterrupt:
         server.stop(0)
 

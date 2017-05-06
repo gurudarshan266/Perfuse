@@ -5,4 +5,9 @@ setupdb:
 	sh setupdb.sh
 
 cleandb:
-    rm chunks.db
+	rm chunks.db
+
+clean:
+	sqlite3 chunks.db < cleandb.sql
+	rm chunks/*
+	sqlite3 chunks.db < seed.sql
