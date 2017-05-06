@@ -69,7 +69,7 @@ def get_chunk_iterator(chunks_sql,s_ip,s_port):
         c_info.len = c[4]
         seeder = c_info.seeders.add()
         seeder.ip = s_ip
-        seeder.port = s_port
+        seeder.port = int(s_port)
         seeder.vivaldimetric = 100
 
         #Fetch the data from the chunk file and save it inside ChunkData()
@@ -82,6 +82,6 @@ def get_chunk_iterator(chunks_sql,s_ip,s_port):
 
         #print chunk_info_data
         yield chunk_info_data
-        time.sleep(0.5)
+        #time.sleep(0.5)
 
 
