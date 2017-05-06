@@ -38,6 +38,8 @@ class Loopback(LoggingMixIn, Operations):
         self.tmp_files = {}
         self.tmpfiles_id = 0
 
+        self.modified_files = []
+
         # self.db = chunk_database()
 
 
@@ -65,6 +67,66 @@ class Loopback(LoggingMixIn, Operations):
 
     #TODO: Need to splice the files at this stage while writing
     def flush(self, path, fh):
+        print("In flush path fh = "+str(fh))
+        db = chunk_database()
+
+        if path not in self.modified_files:
+            print("No modifications in %s")
+            return 0
+
+        if path in self.tmp_files:
+            # Send request to remove the file on chunk server
+            self.req_cnt += 1
+            r2 = request_remove_file(self.req_cnt, path, is_dir=False)
+            resp2 = self.stub.GetResponse(r2)
+
+            filenm = self.tmp_files[path]
+
+            # creates chunks and adds to DB.
+            splice_file(db, filenm, pseudofilenm=path, write_to_chunkfile=True)
+
+            # Use the written chunks data while calling write chunk data
+            self.req_cnt = self.req_cnt + 1
+
+            # Get the Storage Server's details for writing the data
+            req = request_write_chunk(self.req_cnt, path)
+            resp = self.stub.GetResponse(req)
+
+            # Send all the chunk data associated with the file to a storage server
+            push_chunks_to_storage_server(resp, path)
+
+            # Send update to chunkserver about file info change
+            self.req_cnt = self.req_cnt + 1
+            st = os.lstat(self.tmp_files[path])
+            mtime = to_utc(st.st_mtime)
+            req2 = request_update_fileinfo(self.req_cnt, path, st.st_size, mtime, S_ISDIR(st.st_mode))
+            resp2 = self.stub.GetResponse(req2)
+
+            # del self.tmp_files[path]
+
+        else:
+            # Send request to remove the file on chunk server
+            self.req_cnt += 1
+            r2 = request_remove_file(self.req_cnt, path, is_dir=False)
+            resp2 = self.stub.GetResponse(r2)
+
+            # Get the Storage Server's details for writing the data
+            self.req_cnt = self.req_cnt + 1
+            req = request_write_chunk(self.req_cnt, path)
+            resp = self.stub.GetResponse(req)
+
+            # Send all the chunk data associated with the file to a storage server
+            push_chunks_to_storage_server(resp, path)
+
+            # Send update to chunkserver about file info change
+            self.req_cnt += 1
+            sz = db.get_file_size(path)
+            mtime = datetime.datetime.utcnow().strftime("%Y/%m/%d %H:%M:%S")
+            req2 = request_update_fileinfo(self.req_cnt, path, sz, mtime, is_dir=False)
+            resp2 = self.stub.GetResponse(req2)
+
+        # Clear off the hash entries of the file from the table
+        # db.delete_chunks_for_file(path)
         return 0
         return os.fsync(fh)
 
@@ -140,9 +202,9 @@ class Loopback(LoggingMixIn, Operations):
         self.req_cnt = self.req_cnt + 1
         # return 5
         req = request_file_hashes(self.req_cnt,file)
-        print(req)
+        # print(req)
         resp = self.stub.GetResponse(req)
-        print(resp)
+        # print(resp)
         db = chunk_database()
         add_file_hashes_to_db(db,resp)
         return 4
@@ -188,11 +250,25 @@ class Loopback(LoggingMixIn, Operations):
 
     readlink = os.readlink
 
-
-
     def release(self, path, fh):
         db = chunk_database()
 
+        #Remove from local cache
+        if path in self.tmp_files:
+            del self.tmp_files[path]
+
+        if path in self.modified_files:
+            self.modified_files.remove(path)
+
+        # Clear off the hash entries of the file from the table
+        db.delete_chunks_for_file(path)
+        return 0
+
+
+    def release2(self, path, fh):
+        db = chunk_database()
+        if fh>=0:
+            return 0
         if path in self.tmp_files:
             filenm = self.tmp_files[path]
 
@@ -377,6 +453,9 @@ class Loopback(LoggingMixIn, Operations):
     def write(self, path, data, offset, fh):
         print("File = %s | offset = %d"%(path,offset))
 
+        if path not in self.modified_files:
+            self.modified_files.append(path)
+
         # TODO: write w.r.t to the old offset
         # If the file is newly created, directly write to the file
         if path in self.tmp_files:
@@ -421,7 +500,6 @@ class Loopback(LoggingMixIn, Operations):
                 f.flush()
                 f.seek(0)
                 data2 = f.read()
-                print("New data in chunk = %s"%data2)
                 # Compute the new hash
                 newhash = compute_hash(data2)
                 print ("New hash = %s"%newhash)
