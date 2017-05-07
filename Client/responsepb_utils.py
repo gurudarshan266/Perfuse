@@ -82,6 +82,5 @@ def get_chunk_iterator(chunks_sql,s_ip,s_port):
 
         #print chunk_info_data
         yield chunk_info_data
-        time.sleep(0.5)
 
 
