@@ -139,7 +139,6 @@ class Loopback(LoggingMixIn, Operations):
             return os.fsync(fh)
 
     def getattr(self, path, fh=None):
-        print("In get attr")
         if(path=="/.Trash" or path=="/.Trash-1000"):
             raise FuseOSError(EACCES)
 
@@ -213,7 +212,7 @@ class Loopback(LoggingMixIn, Operations):
 
 
     def read(self, path, size, offset, fh):
-        print("Path = %s, Len = %d, Offset = %d"%(path,size,offset))
+        # print("Path = %s, Len = %d, Offset = %d"%(path,size,offset))
         data = ''
         # Directly read from a file when it is newly created
         if path in self.tmp_files:
@@ -243,7 +242,7 @@ class Loopback(LoggingMixIn, Operations):
         self.req_cnt = self.req_cnt + 1
         req = request_dir_info(self.req_cnt, path)
         resp = self.stub.GetResponse(req)
-        print(resp)
+        # print(resp)
 
         # basename is required because read dir expects just the file name not the complete path
         files = [ntpath.basename(f.filename) for f in resp.filesinfo] #Extract just the file names from the array
@@ -442,9 +441,9 @@ class Loopback(LoggingMixIn, Operations):
     def unlink(self, path):
         self.req_cnt = self.req_cnt + 1
         r = request_remove_file(self.req_cnt,path,False)
-        print(r)
+        # print(r)
         resp = self.stub.GetResponse(r)
-        print(resp)
+        # print(resp)
         return resp.ec
 
 
@@ -452,7 +451,7 @@ class Loopback(LoggingMixIn, Operations):
 
     # TODO: take care of append test cases
     def write(self, path, data, offset, fh):
-        print("File = %s | offset = %d"%(path,offset))
+        # print("File = %s | offset = %d"%(path,offset))
 
         if path not in self.modified_files:
             self.modified_files.append(path)
