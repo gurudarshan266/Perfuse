@@ -39,6 +39,8 @@ def push_chunks_to_storage_server(resp,filenm):
     ss_port = str(resp.seeders[0].port)
 
     #create channel and stub to the storage server
+    # TODO: remove this
+    # ss_ip = "152.7.99.61"
     ss_channel = grpc.insecure_channel(ss_ip+':'+ss_port)
     ss_stub = storageserver_pb2_grpc.StorageServerStub(ss_channel)
 
@@ -49,11 +51,11 @@ def push_chunks_to_storage_server(resp,filenm):
     chunks_sql= db.get_chunks_for_file(filenm)
 
     #Send data to Storage Server
-    iterator = get_chunk_iterator(chunks_sql)
+    iterator = get_chunk_iterator(chunks_sql, ss_ip, ss_port)
     ec = ss_stub.PushChunkData(iterator)
     print "EC = %d"%ec.ec
 
-def get_chunk_iterator(chunks_sql):
+def get_chunk_iterator(chunks_sql,s_ip,s_port):
     
     for c in chunks_sql:
 
@@ -65,10 +67,10 @@ def get_chunk_iterator(chunks_sql):
         c_info.filename = c[2]
         c_info.offset = c[3]
         c_info.len = c[4]
-        # seeder = c_info.seeders.add()
-        # seeder.ip = "localhosts"
-        # seeder.port = 50004
-        # seeder.vivaldimetric = 100
+        seeder = c_info.seeders.add()
+        seeder.ip = s_ip
+        seeder.port = s_port
+        seeder.vivaldimetric = 100
 
         #Fetch the data from the chunk file and save it inside ChunkData()
         c_data = chunk_info_data.chunkdata
