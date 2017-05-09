@@ -35,13 +35,18 @@ class storageserver(StorageServerServicer):
 
         c_list = []
 
-        # Decrement copies factor and check if replication is required
-        request_iterator[0].copies -= 1
-        should_duplicate = request_iterator[0].copies > 0
+        should_duplicate = False
         request_iterator_duplicate = []
 
-
+	first = True
         for chunkinfodata in request_iterator:
+
+	    if first:
+		first = False
+        	# Decrement copies factor and check if replication is required
+	        chunkinfodata.copies -= 1
+        	should_duplicate = chunkinfodata.copies > 0
+
             # Copy the chunk data only if it is already not present
             # print("\n\n 1.Before checking for chunk in DB @ %s"%str(time()-start_time))
             if not db.is_chunk_present(chunkinfodata.chunkinfo.hash):
@@ -84,7 +89,7 @@ class storageserver(StorageServerServicer):
         if should_duplicate:
 
             # Get closest Server
-            closest_ss_ip = request_iterator_duplicate[0].chunkinfo.seeders[request_iterator[0].copies].ip
+            closest_ss_ip = request_iterator_duplicate[0].chunkinfo.seeders[request_iterator_duplicate[0].copies].ip
 
             print "Duplicating to %s"%closest_ss_ip
 
