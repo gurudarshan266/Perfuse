@@ -79,7 +79,7 @@ def get_chunk_iterator(chunks_sql,s_ip,s_port ,seeders,copies=1):
 
         # TODO: Check if this works
         #c_info.seeders = seeders
-	for seed in seeders[:copies]:
+	for seed in seeders[:REPLICATION_FACTOR]:
         	seeder = c_info.seeders.add()
         	seeder.ip = seed.ip
         	seeder.port = int(seed.port)
