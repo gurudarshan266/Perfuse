@@ -63,11 +63,12 @@ def push_chunks_to_storage_server(resp,filenm):
     ec = ss_stub.PushChunkData(iterator)
     print "EC = %d"%ec.ec
 
-def get_chunk_iterator(chunks_sql,s_ip,s_port ,seeders):
+def get_chunk_iterator(chunks_sql,s_ip,s_port ,seeders,copies=1):
     
     for c in chunks_sql:
 
         chunk_info_data = ChunkInfoData()
+	chunk_info_data.copies = REPLICATION_FACTOR
 
         #Extract Data into ChunkInfo object
         c_info = chunk_info_data.chunkinfo
@@ -77,11 +78,12 @@ def get_chunk_iterator(chunks_sql,s_ip,s_port ,seeders):
         c_info.len = c[4]
 
         # TODO: Check if this works
-        c_info.seeders = seeders
-        # seeder = c_info.seeders.add()
-        # seeder.ip = s_ip
-        # seeder.port = int(s_port)
-        # seeder.vivaldimetric = 100
+        #c_info.seeders = seeders
+	for seed in seeders[:copies]:
+        	seeder = c_info.seeders.add()
+        	seeder.ip = seed.ip
+        	seeder.port = int(seed.port)
+        	# seeder.vivaldimetric = 100
 
         #Fetch the data from the chunk file and save it inside ChunkData()
         c_data = chunk_info_data.chunkdata
