@@ -8,7 +8,7 @@ class Vivaldi {
 	
 	private Vivaldi()
 	{
-		vMap = new HashMap<>();
+		vMap = new HashMap<String, VivaldiPosition>();
 	}
 	
 	public static Vivaldi getInstance()
