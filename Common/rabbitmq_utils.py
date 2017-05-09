@@ -9,6 +9,7 @@ from constants import *
 
 SCALEDOWN_FACTOR = 10
 FREEGEOPIP_URL = 'http://freegeoip.net/json'
+VIS_IP = "152.7.99.61"
 
 def get_location2(ip_addr):
     match = geolite2.lookup(ip_addr)
@@ -26,7 +27,7 @@ def get_location(ip_addr):
 
 
 def execute(sender_ip,receivers_ip,n):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(VISUALIZER_IP))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(VIS_IP))
     channel = connection.channel()
 
     channel.queue_declare(queue='hello')
