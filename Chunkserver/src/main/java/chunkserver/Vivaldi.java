@@ -2,7 +2,7 @@ package chunkserver;
 
 import java.util.*;
 
-class Vivaldi {
+public class Vivaldi {
 
 	private static Vivaldi instance = null;
 	
