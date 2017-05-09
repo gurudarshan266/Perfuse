@@ -15,8 +15,9 @@ message Request {
     optional string hash = 4;
     optional string data = 5;
     optional string parent = 6;
+    optional string client_ip = 7;
 
-    repeated ChunkInfo chunksinfo = 7; 
-    optional FileInfo fileinfo = 8;
-    optional FileInfo newfileinfo = 9;
+    repeated ChunkInfo chunksinfo = 8; 
+    optional FileInfo fileinfo = 9;
+    optional FileInfo newfileinfo = 10;
 }

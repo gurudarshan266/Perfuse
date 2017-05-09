@@ -402,7 +402,7 @@ public class DbUtil {
 				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("NO_ROOT")
 				.build();
 
-		NodeInfo seed = NodeInfo.newBuilder().setIp("152.46.17.96").setPort(50004).setVivaldimetric(5).build();
+		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.15").setPort(50004).setVivaldimetric(5).build();
 		db.addNodeInfo(seed);
 
 		db.addFileInfo(fi);
