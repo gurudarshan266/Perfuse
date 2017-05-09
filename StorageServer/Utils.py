@@ -1,4 +1,5 @@
 import socket
+import pyping
 
 def get_my_ip(nat=False):
     if(nat):
@@ -9,3 +10,7 @@ def get_my_ip(nat=False):
     val = s.getsockname()[0]
     s.close()
     return val
+
+def getRtt(ip_addr):
+    r = pyping.ping(ip_addr)
+    return r.avg_rtt

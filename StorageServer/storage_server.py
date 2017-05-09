@@ -15,6 +15,7 @@ from db_utils import chunk_database
 from constants import *
 import chunkserver_pb2_grpc
 from time import time,sleep
+from Utils import *
 
 class storageserver(StorageServerServicer):
 
@@ -94,6 +95,15 @@ class storageserver(StorageServerServicer):
         c.maxcap = self.max_cap
         c.cursz = db.get_total_size()
         return c
+
+
+    def pingClient(self, request, context):
+        ip_addr = request.ip
+        delay = getRtt(ip_addr)
+
+        d = Delay()
+        d.dl = delay
+        return d
 
 
 
