@@ -15,7 +15,18 @@ if [ ! -d "venv" ]; then
     python -m pip install virtualenv
     virtualenv venv
     source venv/bin/activate
-    python -m pip install --upgrade pip
-    python -m pip install grpcio
-    python -m pip install grpcio-tools
 fi
+
+
+python -m pip install --upgrade pip
+python -m pip install grpcio
+python -m pip install grpcio-tools
+
+# RabbitMQ tools
+python -m pip install pika
+
+# Ping
+python -m pip install pytping
+
+# Location packages
+python -m pip install python-geoip python-geoip-geolite2
