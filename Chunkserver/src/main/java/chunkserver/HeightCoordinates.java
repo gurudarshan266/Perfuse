@@ -3,7 +3,7 @@ import java.util.*;
 
 class HeightCoordinates {
 	
-	public double x,y,z,h;
+	public double x,y,h;
 	
 	public static final double MAX_X = 30000.0;
 	public static final double MAX_Y = 30000.0;
@@ -101,7 +101,7 @@ class HeightCoordinates {
 
 	boolean valid(double f)
 	{
-		return (Double.isInfinite(f));
+		return (!Double.isInfinite(f));
 	}
 
 	HeightCoordinates primitive(HeightCoordinates c1, HeightCoordinates c2, double scale)
@@ -121,4 +121,9 @@ class HeightCoordinates {
 		std::cout<<*h1u<<std::endl;
 	}*/
 
+	
+	public String toString()
+	{
+		return "("+this.x+", "+this.y+")"; 
+	}
 }

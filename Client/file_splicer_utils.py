@@ -49,7 +49,7 @@ def get_chunk_data(hash,offset,len,ssip,ssport,filenm):
     # If the chunk is already in cache, no need to fetch it
     if db.is_incache(hash):
         data = ''
-        print "Data present in local cache"
+        #print "Data present in local cache"
         with open(CHUNKS_DIR+hash,'r') as f:
             f.seek(offset)
             data = f.read(len)

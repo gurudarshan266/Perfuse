@@ -11,7 +11,7 @@ import time
 
 def is_chunkfile_present(hash):
     val = os.path.isfile(CHUNKS_DIR + hash)
-    print "%s is present = "%hash, val
+    #print "%s is present = "%hash, val
     return val
 
 def add_chunk_to_db(db,chunk):

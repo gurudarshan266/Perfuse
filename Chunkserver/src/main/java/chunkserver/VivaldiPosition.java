@@ -21,16 +21,17 @@ class VivaldiPosition {
 		_nbUpdates = 0;
 	}
 
-	VivaldiPosition create(double err)
+	public static VivaldiPosition create(double err)
 	{
 		VivaldiPosition vp = new VivaldiPosition(new HeightCoordinates(0,0,0));
 		vp.setErrorEstimate( err );
 		return vp;
 	}
 
-	VivaldiPosition create()
+	public static VivaldiPosition create()
 	{
 		VivaldiPosition vp = new VivaldiPosition(new HeightCoordinates(0,0,0));
+		vp.setErrorEstimate(0.0);
 		return vp;
 	}
 
@@ -112,15 +113,17 @@ class VivaldiPosition {
 
 	boolean valid(double f)
 	{
-		return (Double.isInfinite(f));
+		return (!Double.isInfinite(f));
 	}
 
 
 	boolean update(double rtt, HeightCoordinates cj, double ej)
 	{
-		if (!valid(rtt) || !cj.isValid() || !valid(ej)) {
+		if (!(valid(rtt) && cj.isValid() && valid(ej)) ) {
+			System.out.println(this+" is invalid");
 			return false;	// throw error may be
 		}
+		System.out.println(this+" is valid");
 			
 		double error = this._error;
 		
@@ -128,6 +131,7 @@ class VivaldiPosition {
 		// (clock changes lead to crazy rtt values)
 		if (rtt <= 0 || rtt > 5 * 60 * 1000) return false;
 		if (error + ej == 0) return false;
+		System.out.println(this+" is valid2");
 		
 		// Sample weight balances local and remote error. (1)
 		double w = error / (ej + error);
@@ -149,6 +153,7 @@ class VivaldiPosition {
 		
 		HeightCoordinates new_coordinates = this._coordinates.add(this._coordinates.sub(cj.add(random_error)).unity().scale(scale));
 		
+		System.out.println("rand  error = "+random_error+" new_err = "+new_error+" "+new_coordinates);
 		if (valid(new_error) && new_coordinates.isValid()) 
 		{
 			this._coordinates = new_coordinates;
@@ -183,6 +188,10 @@ class VivaldiPosition {
 		return this.update(rtt, cj.getCoordinates(), cj.getErrorEstimate());
 	}
 
+	public String toString()
+	{
+		return "("+this._coordinates.x+", "+this._coordinates.y+")"; 
+	}
 	/*int main()
 	{
 		
