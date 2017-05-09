@@ -6,21 +6,17 @@ option java_outer_classname = "DefinesProto";
 
 enum MethodType {
 	NOP = 0;
-
 	GETFILEINFO = 1;
 	UPDATEFILEINFO = 2;
 	REMOVEFILE = 3;
-
 	GETDIRLIST = 4;
 	ADDDIR = 5;
-
 	GETCHUNKDATA = 6;
 	WRITECHUNK = 7;
-
 	GETHASHES = 8;
 	WRITEHASHES = 9;
-
 	VIVALDIUPDATE = 10;
+	NEWCLIENT = 11;
 }
 
 message FileInfo {
@@ -57,6 +53,9 @@ message Error {
 	required int32 ec = 1 [default = 0];
 }
 
+message Delay {
+	required float dl = 1 [default = 0];
+}
 //Storage Server specific Messages
 
 message ChunkData {
