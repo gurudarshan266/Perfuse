@@ -1,5 +1,6 @@
 #!/bin/sh
 
+
 if [ ! -d "fusepy" ]; then
     git clone https://github.com/terencehonles/fusepy
     touch fusepy/__init__.py
@@ -7,7 +8,8 @@ fi
 
 #Create the chunks directory
 if [ ! -d "chunks" ]; then
-    mkdir chunks/
+    mkdir chunks/ 
+    mkdir tmp/
 fi
 
 apt-get install python-pip python-dev build-essential
@@ -33,3 +35,7 @@ python -m pip install pyping
 
 # Location packages
 python -m pip install python-geoip python-geoip-geolite2
+python -m pip install requests
+
+mkdir ../Common/MsgTemplate/PyTemplate
+make -C ../Common/MsgTemplate

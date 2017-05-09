@@ -7,7 +7,7 @@ import thread
 import threading
 from constants import *
 
-SCALEDOWN_FACTOR = 1000
+SCALEDOWN_FACTOR = 10
 FREEGEOPIP_URL = 'http://freegeoip.net/json'
 
 def get_location2(ip_addr):
@@ -49,7 +49,7 @@ def execute(sender_ip,receivers_ip,n):
         channel.basic_publish(exchange='',
                               routing_key='hello',
                               body=s)
-        sleep(1.1)
+        sleep(0.5)
 
     print(" [x] Sent 'Hello World!'")
 
@@ -67,7 +67,7 @@ def add_to_transfer_queue(sender_ip,receivers_ip,n):
         print "Error: unable to start thread"
         return 0
 
-t = add_to_transfer_queue("152.7.99.61",["24.163.44.95","52.56.177.147","52.76.232.13"],20000)
+#t = add_to_transfer_queue("152.7.99.61",["24.163.44.95","52.56.177.147","52.76.232.13"],20000)
 
-t.join()
-print "Exiting Main Thread"
+#t.join()
+#print "Exiting Main Thread"
