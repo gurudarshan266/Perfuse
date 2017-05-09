@@ -100,9 +100,16 @@ class storageserver(StorageServerServicer):
             stub_ss = chunkserver_pb2_grpc.ChunkServerStub(channel_ss)
 
             # Asynchronously send data to the other server
-            resp_future_ss = stub_ss.PushChunkData.future(request_iterator_duplicate)
+            resp_future_ss = stub_ss.PushChunkData.future(iter(request_iterator_duplicate))
             resp_ss = resp_future_ss.result()
             print "Issued Async duplication"
+
+	    # Send data to visualizer
+	    n = len(request_iterator_duplicate)
+	    sender_ip = CHUNK_SERVER_IP
+	    receivers_ip = [closest_ss_ip]
+	    rabbitmq_utils.add_to_transfer_queue(sender_ip,receivers_ip,n)
+
 
         ec = Error()
         ec.ec = 0

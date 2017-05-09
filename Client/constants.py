@@ -18,3 +18,5 @@ SSPORT_INDEX = 7
 
 TMP_DIR = "tmp/"
 CHUNKS_DIR = "chunks/"
+
+REPLICATION_FACTOR = 2
