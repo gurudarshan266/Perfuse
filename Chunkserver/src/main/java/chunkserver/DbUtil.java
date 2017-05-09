@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import chunkserver.DefinesProto.ChunkInfo;
+import chunkserver.DefinesProto.Delay;
 import chunkserver.DefinesProto.FileInfo;
 import chunkserver.DefinesProto.FileInfo.Builder;
 import chunkserver.DefinesProto.NodeInfo;
@@ -81,7 +82,7 @@ public class DbUtil {
 		String query;
 		query = "CREATE TABLE NODEINFO (" + "ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
 				+ "NAME VARCHAR(255) NOT NULL," + "IP VARCHAR(255) NOT NULL," + "PORT INT NOT NULL,"
-				+ "CAPACITY INT NOT NULL," + "VIVALDIMETRIC INT NOT NULL," + "UPTIME TIMESTAMP NOT NULL);";
+				+ "CAPACITY INT NOT NULL," + "VIVALDIMETRIC DOUBLE NOT NULL," + "UPTIME TIMESTAMP NOT NULL);";
 		try {
 			Statement statement = connect.createStatement();
 			statement.executeUpdate(query);
@@ -101,7 +102,7 @@ public class DbUtil {
 			pstmt.setString(2, seed.getIp());
 			pstmt.setInt(3, seed.getPort());
 			pstmt.setInt(4, 100);
-			pstmt.setInt(5, seed.getVivaldimetric());
+			pstmt.setDouble(5, seed.getVivaldimetric());
 			pstmt.setTimestamp(6, new Timestamp(new Date().getTime()));
 			pstmt.executeUpdate();
 			logger.info(pstmt.toString());
@@ -111,7 +112,6 @@ public class DbUtil {
 		}
 
 	}
-
 	/*
 	 * Currently 'request' is not being parsed It must be parsed for server
 	 * preferences
@@ -225,20 +225,38 @@ public class DbUtil {
 	}
 
 	public void addChunks(ChunkInfo chunk) {
-		String query = "INSERT INTO CHUNKS VALUES (default, ?, ?, ?, ?, ?) ";
-		String filename = chunk.getFilename();
+		String hash = chunk.getHash();
+		String query = "SELECT * FROM CHUNKS WHERE HASH='" + hash + "'";
+		ArrayList<NodeInfo> seeders;
+		Statement stmt;
+		ResultSet rs = null;
+		PreparedStatement pstmt;
 		try {
-			PreparedStatement pstmt = connect.prepareStatement(query);
-			pstmt.setString(1, chunk.getHash());
-			pstmt.setString(2, filename);
-			pstmt.setInt(3, chunk.getOffset());
-			pstmt.setInt(4, chunk.getLen());
-			pstmt.setString(5, getNodeIDs(chunk.getSeedersList()));
-			pstmt.executeUpdate();
+			stmt = connect.createStatement();
+			rs = stmt.executeQuery(query);
+			if (!rs.next()) {
+				query = "INSERT INTO CHUNKS VALUES (default, ?, ?, ?, ?, ?) ";
+				String filename = chunk.getFilename();
+				pstmt = connect.prepareStatement(query);
+				pstmt.setString(1, chunk.getHash());
+				pstmt.setString(2, filename);
+				pstmt.setInt(3, chunk.getOffset());
+				pstmt.setInt(4, chunk.getLen());
+				pstmt.setString(5, getNodeIDs(chunk.getSeedersList()));
+				pstmt.executeUpdate();
+				
+			} else {
+				seeders = getSeeders(rs.getString(5));
+				seeders.add(chunk.getSeeders(0)); /*ASSUMPTION*/
+				query = "UPDATE CHUNKS SEEDERS = ? " + "WHERE HASH='" + hash + "';";
+				pstmt = connect.prepareStatement(query);
+				pstmt.setString(1, getNodeIDs(seeders));
+				pstmt.executeUpdate();
+			}
 			logger.info(pstmt.toString());
-		} catch (SQLException e) {
+		} catch (SQLException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
 
 	}
@@ -288,6 +306,19 @@ public class DbUtil {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public ArrayList<NodeInfo> getSeeders(String nodeids) {
+		ArrayList<NodeInfo> seeders = new ArrayList<NodeInfo>();
+		String[] nodes = nodeids.split("\\s+");
+		for (String id : nodes) {
+			int idint = Integer.parseInt(id);
+			NodeInfo nodeinfo = getNodeFromId(idint);
+			if (nodeinfo != null) {
+				seeders.add(nodeinfo);
+			}
+		}
+		return seeders;
 	}
 
 	public ArrayList<ChunkInfo> getChunks(String filename) {
@@ -378,39 +409,7 @@ public class DbUtil {
 			}
 	}
 
-	public static void main(String[] args) {
-
-		// TODO Auto-generated method stub
-		// Some basic tests
-		DbUtil db = new DbUtil();
-		db.deleteChunkTable();
-		db.deleteFileTable();
-		db.deleteNodeTable();
-		db.createFileTable();
-		db.createChunkTable();
-		db.createNodeTable();
-		// db.addFileInfo(fi);
-
-		FileInfo fi = FileInfo.newBuilder().setFilename("/Guru").setIsDir(true)
-				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("/").build();
-		FileInfo fi2 = FileInfo.newBuilder().setFilename("/Shravan").setIsDir(true)
-				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("/").build();
-		FileInfo fi3 = FileInfo.newBuilder().setFilename("/Guru/ESA").setIsDir(false)
-				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(1073741824).setParent("/Guru")
-				.build();
-		FileInfo fi4 = FileInfo.newBuilder().setFilename("/").setIsDir(true)
-				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("NO_ROOT")
-				.build();
-
-		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.15").setPort(50004).setVivaldimetric(5).build();
-		db.addNodeInfo(seed);
-
-		db.addFileInfo(fi);
-		db.addFileInfo(fi2);
-		db.addFileInfo(fi3);
-		db.addFileInfo(fi4);
-
-	}
+	
 
 	public int updateFileInfo(Request request) {
 		String filename = request.getFilename();
@@ -452,7 +451,7 @@ public class DbUtil {
 			stmt = connect.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 			if (rs.next()) {
-				/*Parent exists*/
+				/* Parent exists */
 				addFileInfo(request.getFileinfo());
 			} else {
 				return -1;
@@ -461,23 +460,24 @@ public class DbUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return 0;
-		
+
 	}
+
 	public int removeDir(Request request) {
 		// TODO Auto-generated method stub
-		
+
 		String filename = request.getFileinfo().getFilename();
 		String query = "SELECT FILENAME FROM FILEINFO WHERE PARENT='" + filename + "';";
 		logger.info(query);
 		try {
 			Statement stmt = connect.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
-			if (rs.next()){
-				return -39;   /*ENOTEMPTY error code*/
+			if (rs.next()) {
+				return -39; /* ENOTEMPTY error code */
 			} else {
-				//removeChunks(filename);
+				// removeChunks(filename);
 				query = "DELETE FROM FILEINFO WHERE FILENAME='" + filename + "';";
 				logger.info(query);
 				stmt.executeUpdate(query);
@@ -488,7 +488,7 @@ public class DbUtil {
 		}
 		return 0;
 	}
-	
+
 	public int removeFile(Request request) {
 		// TODO Auto-generated method stub
 		String filename = request.getFileinfo().getFilename();
@@ -507,7 +507,6 @@ public class DbUtil {
 		return 0;
 	}
 
-
 	private void removeChunks(String filename) {
 		// TODO Auto-generated method stub
 		String query = "DELETE FROM CHUNKS WHERE FILENAME='" + filename + "';";
@@ -524,7 +523,8 @@ public class DbUtil {
 
 	public ArrayList<NodeInfo> getRandomNodes() {
 		// TODO Auto-generated method stub
-		String query = "SELECT * FROM NODEINFO ORDER BY RAND() LIMIT 3";
+		// String query = "SELECT * FROM NODEINFO ORDER BY RAND() LIMIT 3";
+		String query = "SELECT * FROM NODEINFO";
 		ArrayList<NodeInfo> nodes = new ArrayList<NodeInfo>();
 		logger.info(query);
 		try {
@@ -541,9 +541,118 @@ public class DbUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
 
+	public void createDelayTable() {
+		String query;
+		query = "CREATE TABLE DELAYTABLE (" + "ID INTEGER NOT NULL PRIMARY KEY AUTO_INCREMENT,"
+				+ "SIP VARCHAR(255) NOT NULL," + "DIP VARCHAR(255) NOT NULL," + "DELAY DOUBLE NOT NULL)";
+		try {
+			Statement statement = connect.createStatement();
+			statement.executeUpdate(query);
+			logger.info(query);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			// close();
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteDelayTable() {
+		String query = "DROP TABLE IF EXISTS DELAYTABLE";
+		Statement stmt;
+		try {
+			stmt = connect.createStatement();
+			stmt.executeUpdate(query);
+			logger.info(query);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			// close();
+			e.printStackTrace();
+		}
+
+	}
+
+	public void updateDelayTable(String sip, String dip, Delay delay) {
+		// TODO Auto-generated method stub
+		String query = "INSERT INTO DELAYTABLE VALUES (default, ?, ?, ?) ";
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(query);
+			// pstmt.setString(1, "server-1");
+			pstmt.setString(1, sip);
+			pstmt.setString(2, dip);
+			pstmt.setDouble(3, delay.getDl());
+			pstmt.executeUpdate();
+			logger.info(pstmt.toString());
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public ArrayList<NodeInfo> getStorageNodes(String clientip) {
+		// TODO Auto-generated method stub
+		ArrayList<NodeInfo> nodes = new ArrayList<NodeInfo>();
+		String query;
+		NodeInfo node = null;
+		query = "SELECT * FROM DELAYTABLE WHERE SIP='" + clientip + "'" + " ORDER BY DELAY LIMIT 3";
+		logger.info(query);
+		try {
+			Statement statement = connect.createStatement();
+			ResultSet rs = statement.executeQuery(query);
+			logger.info(query);
+			if (!rs.next()) {
+				return nodes;
+			} else {
+				do {
+					node = NodeInfo.newBuilder().setIp(rs.getString(3)).setPort(50004).setVivaldimetric(rs.getDouble(4))
+							.build();
+					nodes.add(node);
+				} while (rs.next());
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			// close();
+			e.printStackTrace();
+		}
+		return nodes;
+	}
 	
+	public static void main(String[] args) {
+
+		// TODO Auto-generated method stub
+		// Some basic tests
+		DbUtil db = new DbUtil();
+		db.deleteChunkTable();
+		db.deleteFileTable();
+		db.deleteNodeTable();
+		db.deleteDelayTable();
+		db.createFileTable();
+		db.createChunkTable();
+		db.createNodeTable();
+		db.createDelayTable();
+		// db.addFileInfo(fi);
+
+//		FileInfo fi = FileInfo.newBuilder().setFilename("/Guru").setIsDir(true)
+//				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("/").build();
+//		FileInfo fi2 = FileInfo.newBuilder().setFilename("/Shravan").setIsDir(true)
+//				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("/").build();
+//		FileInfo fi3 = FileInfo.newBuilder().setFilename("/Guru/ESA").setIsDir(false)
+//				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(1073741824).setParent("/Guru")
+//				.build();
+//		FileInfo fi4 = FileInfo.newBuilder().setFilename("/").setIsDir(true)
+//				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("NO_ROOT")
+//				.build();
+//
+//		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.15").setPort(50004).setVivaldimetric(5).build();
+//		db.addNodeInfo(seed);
+
+//		db.addFileInfo(fi);
+//		db.addFileInfo(fi2);
+//		db.addFileInfo(fi3);
+//		db.addFileInfo(fi4);
+
+	}
 }

@@ -27,10 +27,12 @@ public class ChunkGrpcClient {
 
 	  private final ManagedChannel channel;
 	  private final StorageServerBlockingStub blockingStub;
+	  private String host;
 	  //private final StorageServerStub asyncStub;
 
 	  public ChunkGrpcClient(String host, int port) {
 		  this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(true));
+		  this.setHost(host);
 	  }
 	  
 	  public ChunkGrpcClient(ManagedChannelBuilder<?> channelBuilder ){
@@ -40,7 +42,7 @@ public class ChunkGrpcClient {
 	  }
 	  
 	  public Delay pingClient(NodeInfo nodeinfo) {
-		  logger.info("Ping Client");
+		  logger.info("Ping Src: " + getHost() + "Dst: " + nodeinfo.getIp());
 		  Delay delay = blockingStub.pingClient(nodeinfo);
 		  return delay;
 	  }
@@ -48,6 +50,14 @@ public class ChunkGrpcClient {
 	  public static void main(String[] args) {
 		// TODO Auto-generated method stub
 
+	}
+
+	public String getHost() {
+		return host;
+	}
+
+	public void setHost(String host) {
+		this.host = host;
 	}
 
 }

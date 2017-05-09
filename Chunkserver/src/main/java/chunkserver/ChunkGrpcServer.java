@@ -94,7 +94,7 @@ public class ChunkGrpcServer {
 
 			};
 		}
-
+		
 		public void getResponse(Request request, StreamObserver<Response> responseObserver) {
 
 			MethodType mt = request.getMethod();
@@ -103,13 +103,14 @@ public class ChunkGrpcServer {
 			Builder builder = Response.newBuilder().setRespid(reqid).setMethod(mt);
 			DbUtil db = new DbUtil();
 
+			String sip = request.getClientIp();
+
 			Response response = null;
 
 			switch (mt) {
 			case GETFILEINFO:
 				/*
 				 * Given a filename, retrieve metadata from the database
-				 *
 				 */
 				FileInfo fi = db.getFileInfo(request.getFilename());
 				if (fi == null) {
@@ -127,11 +128,8 @@ public class ChunkGrpcServer {
 			case GETHASHES:
 				/*
 				 * Given a filename, check if its a file Retrieve all hashes of
-				 * the file Fill in chunkinfo struct Fill in response object
-				 * 
-				 */
-				/* Check if the corresponding file information is present in DB
-				 * 
+				 * the file Fill in chunkinfo struct Fill in response object.
+				 * Check if the corresponding file information is present in DB
 				 */
 				//boolean present = 
 				ArrayList<ChunkInfo> hashes = db.getChunks(request.getFilename());
@@ -141,7 +139,6 @@ public class ChunkGrpcServer {
 					for (int i = 0; i < hashes.size(); i++) {
 						builder.addChunksinfo(hashes.get(i));
 					}
-					
 					response = builder.setEc(0).build();
 				}
 
@@ -151,11 +148,11 @@ public class ChunkGrpcServer {
 				 * Given a filename, parent and size, retrieve the closest
 				 * storage server
 				 */
-				NodeInfo seed = db.getNodeInfo(request);
-				if (seed == null) {
+				ArrayList<NodeInfo> seeders = db.getStorageNodes(sip);
+				if (seeders.isEmpty()) {
 					response = builder.setEc(-2).build();
 				} else {
-					response = builder.setEc(0).addSeeders(seed).build();
+					response = builder.setEc(0).addAllSeeders(seeders).build();
 				}
 
 				break;
@@ -205,19 +202,33 @@ public class ChunkGrpcServer {
 				 * New client or server is added
 				 * Fetch a max of three nodes from NODEINFO list
 				 * Get Client objects for each node and pass the new node info to them
-				 * Update vivaldi information
+				 * Update Vivaldi information
 				 */
-				ArrayList<NodeInfo> nodelist = db.getRandomNodes();
-				
-				NodeInfo newnode = NodeInfo.newBuilder().setIp(request.getClientIp()).build();
 				Delay delay = null;
-				
+				ArrayList<NodeInfo> nodelist = db.getRandomNodes();
+				NodeInfo newnode = NodeInfo.newBuilder().setIp(sip).build();
+				boolean is_client = request.getIsClient();
+				if (nodelist.isEmpty()) {
+					if (is_client) {
+						response = builder.setEc(-1).build();
+					} else {
+						db.addNodeInfo(newnode);
+						response = builder.setEc(0).build();
+					}
+					break;
+				}
 				for (NodeInfo node : nodelist) {
 					String ip = node.getIp();
 					ChunkGrpcClient rpcclient = new ChunkGrpcClient(ip, 50004);
 					delay = rpcclient.pingClient(newnode);
+					db.updateDelayTable(sip, ip, delay);
+					if (!is_client) {
+						db.addNodeInfo(newnode);
+					}
+					
 				}
-				
+				response = builder.setEc(0).build();
+				break;
 			default:
 				System.out.println("Invalid message type");
 				break;
