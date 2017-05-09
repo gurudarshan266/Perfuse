@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.logging.Logger;
 
 import chunkserver.DefinesProto.ChunkInfo;
+import chunkserver.DefinesProto.Delay;
 import chunkserver.DefinesProto.Error;
 import chunkserver.DefinesProto.FileInfo;
 import chunkserver.DefinesProto.MethodType;
@@ -72,7 +73,6 @@ public class ChunkGrpcServer {
 
 				int ec = 0;
 //				System.out.println("Received route update message");
-
 				@Override
 				public void onNext(ChunkInfo chunk) {
 					DbUtil db = new DbUtil();
@@ -82,12 +82,10 @@ public class ChunkGrpcServer {
 					 * this
 					 */
 				}
-				
 				@Override
 				public void onError(Throwable t) {
 					System.err.println(t.getMessage());
 				}
-
 				@Override
 				public void onCompleted() {
 					responseObserver.onNext(Error.newBuilder().setEc(-5).build());
@@ -136,12 +134,6 @@ public class ChunkGrpcServer {
 				 * 
 				 */
 				//boolean present = 
-				try {
-					Thread.sleep(10);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 				ArrayList<ChunkInfo> hashes = db.getChunks(request.getFilename());
 				if (hashes.size() == 0) {
 					builder.setEc(-1).build();
@@ -208,11 +200,27 @@ public class ChunkGrpcServer {
 				 */
 				rc = db.addDir(request);
 				break;
+			case NEWNODE:
+				/*
+				 * New client or server is added
+				 * Fetch a max of three nodes from NODEINFO list
+				 * Get Client objects for each node and pass the new node info to them
+				 * Update vivaldi information
+				 */
+				ArrayList<NodeInfo> nodelist = db.getRandomNodes();
+				
+				NodeInfo newnode = NodeInfo.newBuilder().setIp(request.getClientIp()).build();
+				Delay delay = null;
+				
+				for (NodeInfo node : nodelist) {
+					String ip = node.getIp();
+					ChunkGrpcClient rpcclient = new ChunkGrpcClient(ip, 50004);
+					delay = rpcclient.pingClient(newnode);
+				}
 				
 			default:
 				System.out.println("Invalid message type");
 				break;
-
 			}
 			responseObserver.onNext(response);
 			responseObserver.onCompleted();

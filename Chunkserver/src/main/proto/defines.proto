@@ -16,7 +16,7 @@ enum MethodType {
 	GETHASHES = 8;
 	WRITEHASHES = 9;
 	VIVALDIUPDATE = 10;
-	NEWCLIENT = 11;
+	NEWNODE = 11;
 }
 
 message FileInfo {

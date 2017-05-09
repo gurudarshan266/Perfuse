@@ -522,5 +522,28 @@ public class DbUtil {
 		}
 	}
 
+	public ArrayList<NodeInfo> getRandomNodes() {
+		// TODO Auto-generated method stub
+		String query = "SELECT * FROM NODEINFO ORDER BY RAND() LIMIT 3";
+		ArrayList<NodeInfo> nodes = new ArrayList<NodeInfo>();
+		logger.info(query);
+		try {
+			Statement stmt = connect.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (!rs.next()) {
+				return nodes;
+			} else {
+				do {
+					nodes.add(NodeInfo.newBuilder().setIp(rs.getString(3)).build());
+				} while (rs.next());
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
 	
 }
