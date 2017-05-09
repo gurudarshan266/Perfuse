@@ -42,6 +42,11 @@ class Loopback(LoggingMixIn, Operations):
 
         self.modified_files = []
 
+        # Send IP address to the Chunk Server
+        self.req_cnt += 1
+        r = request_add_client(self.req_cnt)
+        resp = self.stub.GetResponse(r)
+
         # self.db = chunk_database()
 
 

@@ -57,7 +57,7 @@ def push_chunks_to_storage_server(resp,filenm):
     sender_ip = get_my_ip()
     receivers_ip = [ss_ip]
     rabbitmq_utils.add_to_transfer_queue(sender_ip,receivers_ip,n)
-    
+
     #Send data to Storage Server
     iterator = get_chunk_iterator(chunks_sql, ss_ip, ss_port)
     ec = ss_stub.PushChunkData(iterator)

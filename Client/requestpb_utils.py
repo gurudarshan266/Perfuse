@@ -20,6 +20,12 @@ def get_my_ip(nat=False):
     s.close()
     return val
 
+def request_add_client(reqid):
+    r = Request()
+    r.reqid = reqid
+    r.method = NEWNODE
+    r.client_ip = get_my_ip()
+    return r
 
 def request_file_hashes(reqid, filenm):
     r = Request()
