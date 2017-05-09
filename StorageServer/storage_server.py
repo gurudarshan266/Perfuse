@@ -87,6 +87,8 @@ class storageserver(StorageServerServicer):
             # Get closest Server
             closest_ss_ip = request_iterator_duplicate[0].chunkinfo.seeders[request_iterator[0].copies]
 
+            print "Duplicating to %s"%closest_ss_ip
+
             # Establish GRPC channel
             channel_ss = grpc.insecure_channel(closest_ss_ip + ":" + STORAGE_SERVER_PORT)
             stub_ss = chunkserver_pb2_grpc.ChunkServerStub(channel_ss)
@@ -94,6 +96,7 @@ class storageserver(StorageServerServicer):
             # Asynchronously send data to the other server
             resp_future_ss = stub_ss.PushChunkData.future(request_iterator_duplicate)
             resp_ss = resp_future_ss.result()
+            print "Issued Async duplication"
 
         ec = Error()
         ec.ec = 0
@@ -153,8 +156,11 @@ if __name__ == '__main__':
     r.reqid = 0
     r.method = NEWNODE
     r.client_ip = STORAGE_SERVER_IP
+    r.is_client = False
 
     resp = stub.GetResponse(r)
+
+    print resp
 
     try:
         while True:

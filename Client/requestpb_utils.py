@@ -25,6 +25,7 @@ def request_add_client(reqid):
     r.reqid = reqid
     r.method = NEWNODE
     r.client_ip = get_my_ip()
+    r.is_client = True
     return r
 
 def request_file_hashes(reqid, filenm):

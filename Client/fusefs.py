@@ -46,6 +46,7 @@ class Loopback(LoggingMixIn, Operations):
         self.req_cnt += 1
         r = request_add_client(self.req_cnt)
         resp = self.stub.GetResponse(r)
+        print(resp)
 
         # self.db = chunk_database()
 
