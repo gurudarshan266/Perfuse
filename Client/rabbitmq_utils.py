@@ -3,6 +3,8 @@ import json
 from geoip import geolite2
 from time import sleep
 import requests
+import thread
+import threading
 
 SCALEDOWN_FACTOR = 1000
 FREEGEOPIP_URL = 'http://freegeoip.net/json'
@@ -22,7 +24,7 @@ def get_location(ip_addr):
     return [ float(rj["latitude"]) , float(rj["longitude"]) ]
 
 
-def add_to_transfer_queue(sender_ip,receivers_ip,n):
+def execute(sender_ip,receivers_ip,n):
     connection = pika.BlockingConnection(pika.ConnectionParameters('152.7.99.61'))
     channel = connection.channel()
 
@@ -52,4 +54,19 @@ def add_to_transfer_queue(sender_ip,receivers_ip,n):
 
     connection.close()
 
-add_to_transfer_queue("152.7.99.61",["24.163.44.95","52.56.177.147","52.76.232.13"],20000)
+
+def add_to_transfer_queue(sender_ip,receivers_ip,n):
+    try:
+        t = threading.Thread(target=execute, args=(sender_ip,receivers_ip,n,))
+        #thread.start_new_thread(execute, (sender_ip,receivers_ip,n,))
+        t.start()
+        print "Started thread ..."
+        return t
+    except:
+        print "Error: unable to start thread"
+        return 0
+
+t = add_to_transfer_queue("152.7.99.61",["24.163.44.95","52.56.177.147","52.76.232.13"],20000)
+
+t.join()
+print "Exiting Main Thread"
