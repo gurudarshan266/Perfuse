@@ -82,7 +82,7 @@ class storageserver(StorageServerServicer):
         stub = chunkserver_pb2_grpc.ChunkServerStub(channel)
 
         # print c_list
-	if not should_replicate:
+	if not should_duplicate:
 	        x = stub.RouteUpdate(iter(c_list))
         # print "7. got response from server @ %s"%str(time()-start_time)
 

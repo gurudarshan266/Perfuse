@@ -31,3 +31,6 @@ python -m pip install requests
 
 mkdir ../Common/MsgTemplate/PyTemplate
 make -C ../Common/MsgTemplate
+
+touch chunks.db
+sqlite3 chunks.db <seed.sql
