@@ -7,14 +7,17 @@ import time
 
 sys.path.append(os.path.abspath("../Common/MsgTemplate/PyTemplate"))
 sys.path.append(os.path.abspath(".."))
+sys.path.append(os.path.abspath("../Common/"))
 
 from defines_pb2 import *
+from request_pb2 import *
 from storageserver_pb2_grpc import *
 from db_utils import chunk_database
 from constants import *
 import chunkserver_pb2_grpc
 from time import time, sleep
 from Utils import *
+import rabbitmq_utils
 
 
 class storageserver(StorageServerServicer):
@@ -32,8 +35,11 @@ class storageserver(StorageServerServicer):
 
         c_list = []
 
-        should_duplicate = request_iterator[0].replicate
+        # Decrement copies factor and check if replication is required
+        request_iterator[0].copies -= 1
+        should_duplicate = request_iterator[0].copies > 0
         request_iterator_duplicate = []
+
 
         for chunkinfodata in request_iterator:
             # Copy the chunk data only if it is already not present
@@ -49,9 +55,9 @@ class storageserver(StorageServerServicer):
                 #	print("3. Done with writing chunk @ %s"%str(time()-start_time))
 
             # TODO: Verify if this change is reflected in the other iterator
-            seeder = chunkinfodata.chunkinfo.seeders[0]#.add()
-            seeder.ip = STORAGE_SERVER_IP
-            seeder.port = int(STORAGE_SERVER_PORT)
+            # seeder = chunkinfodata.chunkinfo.seeders[0]#.add()
+            # seeder.ip = STORAGE_SERVER_IP
+            # seeder.port = int(STORAGE_SERVER_PORT)
             # seeder.vivaldimetric = chunkinfodata.chunkinfo.seeders[0].vivaldimetric
 
             #   print("4. Before appending @ %s"%str(time()-start_time))
@@ -79,9 +85,9 @@ class storageserver(StorageServerServicer):
             request_iterator_duplicate[0].replicate = False
 
             # Get closest Server
-            closest_ss_ip = "0.0.0.0"
+            closest_ss_ip = request_iterator_duplicate[0].chunkinfo.seeders[request_iterator[0].copies]
 
-            #Establish GRPC channel
+            # Establish GRPC channel
             channel_ss = grpc.insecure_channel(closest_ss_ip + ":" + STORAGE_SERVER_PORT)
             stub_ss = chunkserver_pb2_grpc.ChunkServerStub(channel_ss)
 
@@ -138,6 +144,18 @@ if __name__ == '__main__':
     server.add_insecure_port('[::]:' + str(STORAGE_SERVER_PORT))
     server.start()
     _ONE_DAY_IN_SECONDS = 24 * 60 * 60
+
+    channel = grpc.insecure_channel(cs_ip + ":" + CHUNK_SERVER_PORT)
+    stub = chunkserver_pb2_grpc.ChunkServerStub(channel)
+
+    # Send Chunk server about addition of storage server
+    r = Request()
+    r.reqid = 0
+    r.method = NEWNODE
+    r.client_ip = STORAGE_SERVER_IP
+
+    resp = stub.GetResponse(r)
+
     try:
         while True:
             sleep(_ONE_DAY_IN_SECONDS)
