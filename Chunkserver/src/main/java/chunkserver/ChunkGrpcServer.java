@@ -207,6 +207,10 @@ public class ChunkGrpcServer {
 				Delay delay = null;
 				ArrayList<NodeInfo> nodelist = db.getRandomNodes();
 				NodeInfo newnode = NodeInfo.newBuilder().setIp(sip).build();
+				if (db.isNodePresent(newnode)) {
+					response = builder.setEc(0).build(); /*Ideally should throw error*/
+					break;
+				}
 				boolean is_client = request.getIsClient();
 				if (nodelist.isEmpty()) {
 					if (is_client) {

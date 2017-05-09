@@ -42,7 +42,7 @@ public class ChunkGrpcClient {
 	  }
 	  
 	  public Delay pingClient(NodeInfo nodeinfo) {
-		  logger.info("Ping Src: " + getHost() + "Dst: " + nodeinfo.getIp());
+		  logger.info("Ping Src: " + getHost() + " Dst: " + nodeinfo.getIp());
 		  Delay delay = blockingStub.pingClient(nodeinfo);
 		  return delay;
 	  }

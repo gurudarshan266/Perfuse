@@ -620,6 +620,26 @@ public class DbUtil {
 		return nodes;
 	}
 	
+	public boolean isNodePresent(NodeInfo newnode) {
+		String query = "SELECT * FROM NODEINFO WHERE IP='" + newnode.getIp() + "';";
+		ResultSet rs;
+		try {
+			Statement stmt = connect.createStatement();
+			rs = stmt.executeQuery(query);
+			if (rs.next()) {
+				return true;
+			} else {
+				return false;
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return false;
+		
+	}
+	
 	public static void main(String[] args) {
 
 		// TODO Auto-generated method stub
@@ -642,9 +662,9 @@ public class DbUtil {
 //		FileInfo fi3 = FileInfo.newBuilder().setFilename("/Guru/ESA").setIsDir(false)
 //				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(1073741824).setParent("/Guru")
 //				.build();
-//		FileInfo fi4 = FileInfo.newBuilder().setFilename("/").setIsDir(true)
-//				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("NO_ROOT")
-//				.build();
+		FileInfo fi4 = FileInfo.newBuilder().setFilename("/").setIsDir(true)
+				.setLastmodified(sdf.format(new Timestamp(new Date().getTime()))).setSize(4096).setParent("NO_ROOT")
+				.build();
 //
 //		NodeInfo seed = NodeInfo.newBuilder().setIp("192.168.1.15").setPort(50004).setVivaldimetric(5).build();
 //		db.addNodeInfo(seed);
@@ -652,7 +672,9 @@ public class DbUtil {
 //		db.addFileInfo(fi);
 //		db.addFileInfo(fi2);
 //		db.addFileInfo(fi3);
-//		db.addFileInfo(fi4);
+		db.addFileInfo(fi4);
 
 	}
+
+	
 }
