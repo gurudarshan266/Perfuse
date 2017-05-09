@@ -46,6 +46,8 @@ class storageserver(StorageServerServicer):
         	# Decrement copies factor and check if replication is required
 	        chunkinfodata.copies -= 1
         	should_duplicate = chunkinfodata.copies > 0
+		print("Copies = %d, duplicate? = "%chunkinfodata.copies)
+		print(should_duplicate)
 
             # Copy the chunk data only if it is already not present
             # print("\n\n 1.Before checking for chunk in DB @ %s"%str(time()-start_time))
