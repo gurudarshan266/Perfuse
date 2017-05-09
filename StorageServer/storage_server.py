@@ -75,17 +75,16 @@ class storageserver(StorageServerServicer):
         stub = chunkserver_pb2_grpc.ChunkServerStub(channel)
 
         # print c_list
-        x = stub.RouteUpdate(iter(c_list))
+	if not should_replicate:
+	        x = stub.RouteUpdate(iter(c_list))
         # print "7. got response from server @ %s"%str(time()-start_time)
 
 
         # If the chunk has to be replicated to another storage server
         if should_duplicate:
-            # Disable replication for the next node
-            request_iterator_duplicate[0].replicate = False
 
             # Get closest Server
-            closest_ss_ip = request_iterator_duplicate[0].chunkinfo.seeders[request_iterator[0].copies]
+            closest_ss_ip = request_iterator_duplicate[0].chunkinfo.seeders[request_iterator[0].copies].ip
 
             print "Duplicating to %s"%closest_ss_ip
 
