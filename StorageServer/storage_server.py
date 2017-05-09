@@ -127,8 +127,9 @@ class storageserver(StorageServerServicer):
 
     def pingClient(self, request, context):
         ip_addr = request.ip
-        delay = getRtt(ip_addr)
-
+        delay = float(getRtt(ip_addr))
+	print("Delay to %s is"%(ip_addr))
+	print(delay)
         d = Delay()
         d.dl = delay
         return d
