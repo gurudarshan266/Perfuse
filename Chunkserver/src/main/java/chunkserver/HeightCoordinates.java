@@ -1,7 +1,9 @@
+package chunkserver;
+
 import java.lang.Math.*;
 import java.util.*;
 
-class HeightCoordinates {
+public class HeightCoordinates {
 	
 	public double x,y,h;
 	

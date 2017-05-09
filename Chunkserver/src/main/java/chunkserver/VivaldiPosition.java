@@ -1,7 +1,9 @@
+package chunkserver;
+
 import java.lang.Math.*;
 import java.util.*;
 
-class VivaldiPosition {
+public class VivaldiPosition {
 
 	HeightCoordinates _coordinates;
 	int _nbUpdates;
