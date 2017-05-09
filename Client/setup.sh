@@ -10,6 +10,9 @@ if [ ! -d "chunks" ]; then
     mkdir chunks/
 fi
 
+apt-get install python-pip python-dev build-essential
+apt-get install python-virtualenv
+
 if [ ! -d "venv" ]; then
     python -m pip install --upgrade pip
     python -m pip install virtualenv
@@ -26,7 +29,7 @@ python -m pip install grpcio-tools
 python -m pip install pika
 
 # Ping
-python -m pip install pytping
+python -m pip install pyping
 
 # Location packages
 python -m pip install python-geoip python-geoip-geolite2
