@@ -4,10 +4,12 @@ from db_utils import *
 from constants import *
 from storageserver_pb2 import *
 import storageserver_pb2_grpc
+from requestpb_utils import get_my_ip
 
 import grpc
 import os.path
 import time
+import rabbitmq_utils
 
 def is_chunkfile_present(hash):
     val = os.path.isfile(CHUNKS_DIR + hash)
@@ -50,6 +52,12 @@ def push_chunks_to_storage_server(resp,filenm):
     # Get the chunks from DB
     chunks_sql= db.get_chunks_for_file(filenm)
 
+    # Send data to visualizer
+    n = len(chunks_sql)
+    sender_ip = get_my_ip()
+    receivers_ip = [ss_ip]
+    rabbitmq_utils.add_to_transfer_queue(sender_ip,receivers_ip,n)
+    
     #Send data to Storage Server
     iterator = get_chunk_iterator(chunks_sql, ss_ip, ss_port)
     ec = ss_stub.PushChunkData(iterator)

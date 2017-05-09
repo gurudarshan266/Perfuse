@@ -23,6 +23,7 @@ import constants
 import chunkserver_pb2_grpc
 from db_utils import *
 from file_splicer_utils import *
+import rabbitmq_utils
 
 class Loopback(LoggingMixIn, Operations):
     def __init__(self, root,cs_ip):

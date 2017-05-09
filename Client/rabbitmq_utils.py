@@ -5,6 +5,7 @@ from time import sleep
 import requests
 import thread
 import threading
+from constants import *
 
 SCALEDOWN_FACTOR = 1000
 FREEGEOPIP_URL = 'http://freegeoip.net/json'
@@ -25,7 +26,7 @@ def get_location(ip_addr):
 
 
 def execute(sender_ip,receivers_ip,n):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('152.7.99.61'))
+    connection = pika.BlockingConnection(pika.ConnectionParameters(VISUALIZER_IP))
     channel = connection.channel()
 
     channel.queue_declare(queue='hello')
@@ -42,7 +43,7 @@ def execute(sender_ip,receivers_ip,n):
     s2 = '[ {"sender":[23.795398,72.597656],\
                 "receiver":[[8.309341,15.644531],[-27.459539,126.035156]]\
                 } ]'
-    print s2
+    # print s2
 
     for i in range(n):
         channel.basic_publish(exchange='',
