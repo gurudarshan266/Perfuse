@@ -542,7 +542,7 @@ public class DbUtil {
 			e.printStackTrace();
 		}
 
-		return null;
+		return nodes;
 	}
 
 	public void createDelayTable() {
