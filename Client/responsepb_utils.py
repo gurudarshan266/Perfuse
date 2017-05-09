@@ -35,7 +35,7 @@ def add_file_hashes_to_db(db,resp):
 
 
 def push_chunks_to_storage_server(resp,filenm):
-    print resp
+    # print resp
     #Extract the storage server port and IP
     ss_ip = resp.seeders[0].ip
     ss_port = str(resp.seeders[0].port)
@@ -59,11 +59,11 @@ def push_chunks_to_storage_server(resp,filenm):
     rabbitmq_utils.add_to_transfer_queue(sender_ip,receivers_ip,n)
 
     #Send data to Storage Server
-    iterator = get_chunk_iterator(chunks_sql, ss_ip, ss_port)
+    iterator = get_chunk_iterator(chunks_sql, ss_ip, ss_port, resp.seeders)
     ec = ss_stub.PushChunkData(iterator)
     print "EC = %d"%ec.ec
 
-def get_chunk_iterator(chunks_sql,s_ip,s_port):
+def get_chunk_iterator(chunks_sql,s_ip,s_port ,seeders):
     
     for c in chunks_sql:
 
@@ -75,10 +75,13 @@ def get_chunk_iterator(chunks_sql,s_ip,s_port):
         c_info.filename = c[2]
         c_info.offset = c[3]
         c_info.len = c[4]
-        seeder = c_info.seeders.add()
-        seeder.ip = s_ip
-        seeder.port = int(s_port)
-        seeder.vivaldimetric = 100
+
+        # TODO: Check if this works
+        c_info.seeders = seeders
+        # seeder = c_info.seeders.add()
+        # seeder.ip = s_ip
+        # seeder.port = int(s_port)
+        # seeder.vivaldimetric = 100
 
         #Fetch the data from the chunk file and save it inside ChunkData()
         c_data = chunk_info_data.chunkdata
