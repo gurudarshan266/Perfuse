@@ -18,6 +18,7 @@ import chunkserver_pb2_grpc
 from time import time, sleep
 from Utils import *
 import rabbitmq_utils
+import storageserver_pb2_grpc
 
 
 class storageserver(StorageServerServicer):
@@ -39,6 +40,7 @@ class storageserver(StorageServerServicer):
         request_iterator_duplicate = []
 
 	first = True
+	closest_ss_ip = ""
         for chunkinfodata in request_iterator:
 
 	    if first:
@@ -48,6 +50,9 @@ class storageserver(StorageServerServicer):
         	should_duplicate = chunkinfodata.copies > 0
 		print("Copies = %d, duplicate? = "%chunkinfodata.copies)
 		print(should_duplicate)
+            	# Get closest Server
+		if should_duplicate:
+                	closest_ss_ip = chunkinfodata.chunkinfo.seeders[-chunkinfodata.copies].ip
 
             # Copy the chunk data only if it is already not present
             # print("\n\n 1.Before checking for chunk in DB @ %s"%str(time()-start_time))
@@ -90,14 +95,12 @@ class storageserver(StorageServerServicer):
         # If the chunk has to be replicated to another storage server
         if should_duplicate:
 
-            # Get closest Server
-            closest_ss_ip = request_iterator_duplicate[0].chunkinfo.seeders[request_iterator_duplicate[0].copies].ip
 
             print "Duplicating to %s"%closest_ss_ip
 
             # Establish GRPC channel
             channel_ss = grpc.insecure_channel(closest_ss_ip + ":" + STORAGE_SERVER_PORT)
-            stub_ss = chunkserver_pb2_grpc.ChunkServerStub(channel_ss)
+            stub_ss = storageserver_pb2_grpc.StorageServerStub(channel_ss)
 
             # Asynchronously send data to the other server
             resp_future_ss = stub_ss.PushChunkData.future(iter(request_iterator_duplicate))
@@ -106,7 +109,7 @@ class storageserver(StorageServerServicer):
 
 	    # Send data to visualizer
 	    n = len(request_iterator_duplicate)
-	    sender_ip = CHUNK_SERVER_IP
+	    sender_ip = STORAGE_SERVER_IP
 	    receivers_ip = [closest_ss_ip]
 	    rabbitmq_utils.add_to_transfer_queue(sender_ip,receivers_ip,n)
 
@@ -139,8 +142,15 @@ class storageserver(StorageServerServicer):
         return c
 
     def pingClient(self, request, context):
-        ip_addr = request.ip
-        delay = float(getRtt(ip_addr))
+	ip_addr = request.ip
+	delay = float(getRtt(ip_addr))
+	
+	# Send data to visualizer
+	n = 50
+	sender_ip = STORAGE_SERVER_IP
+	receivers_ip = [ip_addr]
+	rabbitmq_utils.add_to_transfer_queue(sender_ip,receivers_ip,n)
+	
 	print("Delay to %s is"%(ip_addr))
 	print(delay)
         d = Delay()
