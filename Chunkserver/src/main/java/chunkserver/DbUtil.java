@@ -98,6 +98,7 @@ public class DbUtil {
 		
 		
 		if (this.isNodePresent(seed)) return;
+		
 		new Thread(new HeartBeatThread(seed.getIp())).start();
 
 		String query = "INSERT INTO NODEINFO VALUES (default, ?, ?, ?, ?, ?, ?) ";
