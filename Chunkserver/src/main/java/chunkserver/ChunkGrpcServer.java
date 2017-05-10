@@ -223,9 +223,13 @@ public class ChunkGrpcServer {
 				}
 				for (NodeInfo node : nodelist) {
 					String ip = node.getIp();
+					Vivaldi.getInstance().addNode(ip);
+				
 					ChunkGrpcClient rpcclient = new ChunkGrpcClient(ip, 50004);
 					delay = rpcclient.pingClient(newnode);
 					db.updateDelayTable(sip, ip, delay);
+					
+					Vivaldi.getInstance().setDistance(sip,ip,delay.getDl());
 					if (!is_client) {
 						db.addNodeInfo(newnode);
 					}
