@@ -1,10 +1,18 @@
 package chunkserver;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.logging.Logger;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
 import chunkserver.DefinesProto.MethodType;
 import chunkserver.RequestProto.Request;
 
 public class HeartBeatThread implements Runnable {
-
+	private static final Logger logger = Logger.getLogger(ChunkGrpcServer.class.getName());
 	private String host;
 	public HeartBeatThread(String ip) {
 		this.setHost(ip);
@@ -19,7 +27,7 @@ public class HeartBeatThread implements Runnable {
 				e.printStackTrace();
 			}
 			ChunkGrpcClient rpcclient = new ChunkGrpcClient(this.getHost(), 50004);
-			System.out.println("HEART BEAT MONITORING STARTED FOR " + getHost());
+			logger.info("HEART BEAT MONITORING STARTED FOR " + getHost());
 			boolean flag = true;
 			while (flag) {
 				try {
@@ -28,10 +36,22 @@ public class HeartBeatThread implements Runnable {
 				} catch (Exception e) {
 					System.err.println(e.getMessage() + ":Node "+ getHost() + " has died");
 					flag = false;
+					deleteDelayEntries();
+					deleteNodeEntries();
 				}
 			}
 		}
-
+	
+	private void deleteNodeEntries() {
+		DbUtil db = new DbUtil();
+		db.deleteNodeEntries(this.getHost());
+	}
+	private void deleteDelayEntries() {
+		DbUtil db = new DbUtil();
+	    
+	    db.deleteDelayEntries(this.getHost());
+		
+	}
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 

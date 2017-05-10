@@ -96,7 +96,6 @@ public class DbUtil {
 
 	public void addNodeInfo(NodeInfo seed) {
 		
-		
 		if (this.isNodePresent(seed)) return;
 		
 		new Thread(new HeartBeatThread(seed.getIp())).start();
@@ -680,6 +679,33 @@ public class DbUtil {
 //		db.addFileInfo(fi3);
 		db.addFileInfo(fi4);
 
+	}
+
+	public void deleteDelayEntries(String ip) {
+		// TODO Auto-generated method stub
+		String query = "DELETE FROM DELAYTABLE WHERE DIP='" + ip + "' OR SIP='" + ip+ "';";
+		logger.info(query);
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(query);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteNodeEntries(String ip) {
+		// TODO Auto-generated method stub
+		String query = "DELETE FROM NODEINFO WHERE IP='" + ip +"';";
+		logger.info(query);
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(query);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	
