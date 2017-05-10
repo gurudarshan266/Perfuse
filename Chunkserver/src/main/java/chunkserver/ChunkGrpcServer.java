@@ -132,7 +132,7 @@ public class ChunkGrpcServer {
 				 * Check if the corresponding file information is present in DB
 				 */
 				//boolean present = 
-				ArrayList<ChunkInfo> hashes = db.getChunks(request.getFilename());
+				ArrayList<ChunkInfo> hashes = db.getChunks(request.getFilename(), sip);
 				if (hashes.size() == 0) {
 					builder.setEc(-1).build();
 				} else {
