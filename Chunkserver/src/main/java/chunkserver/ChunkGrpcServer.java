@@ -229,7 +229,6 @@ public class ChunkGrpcServer {
 					if (!is_client) {
 						db.addNodeInfo(newnode);
 					}
-					
 				}
 				response = builder.setEc(0).build();
 				break;

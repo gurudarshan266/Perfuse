@@ -7,6 +7,10 @@ import chunkserver.DefinesProto.Delay;
 import chunkserver.DefinesProto.NodeInfo;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.StatusRuntimeException;
+import chunkserver.RequestProto.Request;
+
+import java.io.IOException;
 //import io.grpc.Status;
 //import io.grpc.StatusRuntimeException;
 //import io.grpc.stub.StreamObserver;
@@ -45,6 +49,16 @@ public class ChunkGrpcClient {
 		  logger.info("Ping Src: " + getHost() + " Dst: " + nodeinfo.getIp());
 		  Delay delay = blockingStub.pingClient(nodeinfo);
 		  return delay;
+	  }
+	  
+	  public Error heartBeat(Request req) {
+	        //responseObserver.onError(new Exception("Goodbye world"));
+		  try {
+			  blockingStub.heartBeat(req);
+		  } catch (Exception e) {
+			  e.printStackTrace();
+		  }
+		  return null;
 	  }
 	
 	  public static void main(String[] args) {

@@ -5,11 +5,13 @@ option java_outer_classname = "StorageServerProto";
                                                                   
 package perfuse;                                                  
                                                                   
-import "defines.proto";                                          
+import "defines.proto";  
+import "request.proto";                                        
 
 service StorageServer {                                             
     rpc GetChunkData(ChunkInfo) returns (ChunkData) {}                
     rpc PushChunkData(stream ChunkInfoData) returns (Error) {}
     rpc GetCapacity(Empty) returns (Capacity) {}
     rpc pingClient(NodeInfo) returns (Delay) {}
+    rpc heartBeat(Request) returns (Error) {}
 }
