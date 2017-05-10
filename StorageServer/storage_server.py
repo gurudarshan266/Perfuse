@@ -160,7 +160,7 @@ class storageserver(StorageServerServicer):
     def heartBeat(self, request, context):
 	ec = Error()
 	ec.ec = 0
-	sleep(2)
+	#sleep(2)
 	print("HeartBEAT")
 	return ec 
 
