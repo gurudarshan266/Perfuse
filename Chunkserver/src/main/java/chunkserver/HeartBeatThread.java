@@ -12,7 +12,7 @@ import chunkserver.DefinesProto.MethodType;
 import chunkserver.RequestProto.Request;
 
 public class HeartBeatThread implements Runnable {
-	private static final Logger logger = Logger.getLogger(ChunkGrpcServer.class.getName());
+	private static final Logger logger = Logger.getLogger(HeartBeatThread.class.getName());
 	private String host;
 	public HeartBeatThread(String ip) {
 		this.setHost(ip);
@@ -34,7 +34,7 @@ public class HeartBeatThread implements Runnable {
 					Thread.sleep(1000);
 					rpcclient.heartBeat(req);
 				} catch (Exception e) {
-					System.err.println(e.getMessage() + ":Node "+ getHost() + " has died");
+					logger.warning(e.getMessage() + ": Node "+ getHost() + " has died");
 					flag = false;
 					deleteDelayEntries();
 					deleteNodeEntries();
