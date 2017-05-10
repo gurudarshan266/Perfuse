@@ -18,9 +18,13 @@ def is_chunkfile_present(hash):
 
 def add_chunk_to_db(db,chunk):
     #TODO: Get the node with the lowest vivaldi metric
-    ssip = chunk.seeders[0].ip
+    ssips = ""
+    for seeder in chunk.seeders:
+	ssips = ssips+seeder.ip+","
+
+    #ssip = chunk.seeders[0].ip
     ssport = chunk.seeders[0].port
-    db.add_chunk(chunk.hash, chunk.filename, chunk.offset, chunk.len, ssip, ssport)
+    db.add_chunk(chunk.hash, chunk.filename, chunk.offset, chunk.len, ssips, ssport)
     #If chunk file already present, update the value in the table
     if is_chunkfile_present(chunk.hash):
         db.set_incache(chunk.hash, True)

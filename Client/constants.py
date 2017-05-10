@@ -20,3 +20,5 @@ TMP_DIR = "tmp/"
 CHUNKS_DIR = "chunks/"
 
 REPLICATION_FACTOR = 2
+
+CLIENT_IP = "152.46.19.253"

@@ -11,6 +11,8 @@ SCALEDOWN_FACTOR = 10
 FREEGEOPIP_URL = 'http://freegeoip.net/json'
 VIS_IP = "152.7.99.61"
 
+loc_dict = {}
+
 def get_location2(ip_addr):
     match = geolite2.lookup(ip_addr)
     if match is not None:
@@ -19,11 +21,19 @@ def get_location2(ip_addr):
         return [0.0,0.0]
 
 def get_location(ip_addr):
-    url = '{}/{}'.format(FREEGEOPIP_URL, ip_addr)
-    response = requests.get(url)
-    response.raise_for_status()
-    rj = response.json()
-    return [ float(rj["latitude"]) , float(rj["longitude"]) ]
+    global loc_dict
+    if ip_addr in loc_dict:
+	print("Found %s in map"%ip_addr)
+	return loc_dict[ip_addr]
+    
+    else:
+	    url = '{}/{}'.format(FREEGEOPIP_URL, ip_addr)
+	    response = requests.get(url)
+	    response.raise_for_status()
+	    rj = response.json()
+	    ret = [ float(rj["latitude"]) , float(rj["longitude"]) ]
+	    loc_dict[ip_addr] = ret
+	    return ret
 
 
 def execute(sender_ip,receivers_ip,n):
@@ -52,7 +62,7 @@ def execute(sender_ip,receivers_ip,n):
                               body=s)
         sleep(0.5)
 
-    print(" [x] Sent 'Hello World!'")
+    print(" [x] Sent Data to Visualizer")
 
     connection.close()
 
