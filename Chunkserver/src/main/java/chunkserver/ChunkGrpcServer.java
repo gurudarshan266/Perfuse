@@ -60,7 +60,7 @@ public class ChunkGrpcServer {
 	 * Main launches the server from the command line.
 	 */
 	public static void main(String[] args) throws IOException, InterruptedException {
-		final ChunkGrpcServer server = new ChunkGrpcServer();
+		final ChunkGrpcServer server = new ChunkGrpcServer();	
 		server.start();
 		server.blockUntilShutdown();
 	}
@@ -229,7 +229,6 @@ public class ChunkGrpcServer {
 					if (!is_client) {
 						db.addNodeInfo(newnode);
 					}
-					
 				}
 				response = builder.setEc(0).build();
 				break;

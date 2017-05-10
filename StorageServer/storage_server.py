@@ -157,6 +157,12 @@ class storageserver(StorageServerServicer):
         d.dl = delay
         return d
 
+    def heartBeat(self, request, context):
+	ec = Error()
+	ec.ec = 0
+	#sleep(2)
+	print("HeartBEAT")
+	return ec 
 
 if __name__ == '__main__':
     cs_ip = CHUNK_SERVER_IP

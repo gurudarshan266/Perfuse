@@ -95,6 +95,11 @@ public class DbUtil {
 	}
 
 	public void addNodeInfo(NodeInfo seed) {
+		
+		if (this.isNodePresent(seed)) return;
+		
+		new Thread(new HeartBeatThread(seed.getIp())).start();
+
 		String query = "INSERT INTO NODEINFO VALUES (default, ?, ?, ?, ?, ?, ?) ";
 		try {
 			PreparedStatement pstmt = connect.prepareStatement(query);
@@ -248,7 +253,7 @@ public class DbUtil {
 			} else {
 				seeders = getSeeders(rs.getString(5));
 				seeders.add(chunk.getSeeders(0)); /*ASSUMPTION*/
-				query = "UPDATE CHUNKS SEEDERS = ? " + "WHERE HASH='" + hash + "';";
+				query = "UPDATE CHUNKS SET SEEDERS = ?" + "WHERE HASH='" + hash + "';";
 				pstmt = connect.prepareStatement(query);
 				pstmt.setString(1, getNodeIDs(seeders));
 				pstmt.executeUpdate();
@@ -419,7 +424,7 @@ public class DbUtil {
 			addFileInfo(request.getFileinfo());
 		} else {
 			fi = request.getFileinfo();
-			query = "UPDATE FILEINFO SIZE = ?, LAST_MODIFIED = ?, DIRECTORY = ?, PARENT, = ? " + "WHERE FILENAME='"
+			query = "UPDATE FILEINFO SET SIZE = ?, LAST_MODIFIED = ?, DIRECTORY = ?, PARENT, = ? " + "WHERE FILENAME='"
 					+ filename + "';";
 			try {
 				PreparedStatement pstmt = connect.prepareStatement(query);
@@ -674,6 +679,33 @@ public class DbUtil {
 //		db.addFileInfo(fi3);
 		db.addFileInfo(fi4);
 
+	}
+
+	public void deleteDelayEntries(String ip) {
+		// TODO Auto-generated method stub
+		String query = "DELETE FROM DELAYTABLE WHERE DIP='" + ip + "' OR SIP='" + ip+ "';";
+		logger.info(query);
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(query);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteNodeEntries(String ip) {
+		// TODO Auto-generated method stub
+		String query = "DELETE FROM NODEINFO WHERE IP='" + ip +"';";
+		logger.info(query);
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(query);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	
