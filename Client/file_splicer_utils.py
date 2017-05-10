@@ -4,6 +4,7 @@ from  constants import *
 import storageserver_pb2_grpc
 from defines_pb2 import *
 
+import rabbitmq_utils
 import os
 import grpc
 import os.path
@@ -43,7 +44,7 @@ def get_chunk_list(db, filenm, offset, len):
 
 #TODO:Get the SS IP based on the lowest vivaldi metric
 # Reads chunk from the local cache or downloads it and reads it
-def get_chunk_data(hash,offset,len,ssip,ssport,filenm):
+def get_chunk_data(hash,offset,len,ssips,ssport,filenm):
     db = chunk_database()
 
     # If the chunk is already in cache, no need to fetch it
@@ -57,37 +58,45 @@ def get_chunk_data(hash,offset,len,ssip,ssport,filenm):
 
     # if not present in local cache, get it from the server
     else:
-        channel = grpc.insecure_channel(ssip + ":" + str(ssport))
-        ss_stub = storageserver_pb2_grpc.StorageServerStub(channel)
+	ssip_arr = ssips.split(",")[:-1]
 
-        # Create CHunkInfo Object to be passed to the storage server
-        chunk_info = ChunkInfo()
-        chunk_info.filename = filenm
-        chunk_info.hash = hash
-        chunk_info.offset = offset
-        chunk_info.len = len
+	for ssip in ssip_arr:
+		try:				
+			print("Attempting to read %s from %s"%(hash,ssip))
+			channel = grpc.insecure_channel(ssip + ":" + str(ssport))
+			ss_stub = storageserver_pb2_grpc.StorageServerStub(channel)
 
-        # Get ChunkData from the storage server for the requested chunk
-        chunk_data = ss_stub.GetChunkData(chunk_info).data
-        print "Downloaded %d from %s"%(chunk_info.len,ssip)
+			# Create CHunkInfo Object to be passed to the storage server
+			chunk_info = ChunkInfo()
+			chunk_info.filename = filenm
+			chunk_info.hash = hash
+			chunk_info.offset = offset
+			chunk_info.len = len
 
-        #TODO: If no data is returned. Get the storage server node location from the chunk server
-        # if not chunk_data:
-        #     pass
+			# Send data to visualizer
+			n = 10
+			sender_ip = ssip
+			receivers_ip = [CLIENT_IP]
+			rabbitmq_utils.add_to_transfer_queue(sender_ip,receivers_ip,n)
+			
+			# Get ChunkData from the storage server for the requested chunk
+			chunk_data = ss_stub.GetChunkData(chunk_info).data
+			print "Downloaded %d from %s"%(chunk_info.len,ssip)
 
-        # Update the in-cache attribute in the table
-        db.set_incache(hash,True)
+			# Update the in-cache attribute in the table
+			db.set_incache(hash,True)
 
-        # Write to chunk file
-        with open(CHUNKS_DIR+hash,'w+') as f:
-            f.write(chunk_data)
+			# Write to chunk file
+			with open(CHUNKS_DIR+hash,'w+') as f:
+			    f.write(chunk_data)
 
-        return chunk_data[offset:offset+len]
+			return chunk_data[offset:offset+len]
+		
+		except Exception:
+			print("Failed to read %s from %s"%(hash,ssip))
+			continue
+			
 
-    # with open("chunks/"+hash) as f:
-    #     f.seek(offset)
-    #     data = f.read(len)
-    # return data
 
 
 

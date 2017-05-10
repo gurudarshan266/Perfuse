@@ -132,7 +132,7 @@ public class ChunkGrpcServer {
 				 * Check if the corresponding file information is present in DB
 				 */
 				//boolean present = 
-				ArrayList<ChunkInfo> hashes = db.getChunks(request.getFilename());
+				ArrayList<ChunkInfo> hashes = db.getChunks(request.getFilename(), sip);
 				if (hashes.size() == 0) {
 					builder.setEc(-1).build();
 				} else {
@@ -223,9 +223,13 @@ public class ChunkGrpcServer {
 				}
 				for (NodeInfo node : nodelist) {
 					String ip = node.getIp();
+					Vivaldi.getInstance().addNode(ip);
+				
 					ChunkGrpcClient rpcclient = new ChunkGrpcClient(ip, 50004);
 					delay = rpcclient.pingClient(newnode);
 					db.updateDelayTable(sip, ip, delay);
+					
+					Vivaldi.getInstance().setDistance(sip,ip,delay.getDl());
 					if (!is_client) {
 						db.addNodeInfo(newnode);
 					}

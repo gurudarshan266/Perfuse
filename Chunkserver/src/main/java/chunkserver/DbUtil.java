@@ -96,8 +96,8 @@ public class DbUtil {
 
 	public void addNodeInfo(NodeInfo seed) {
 		
-		
 		if (this.isNodePresent(seed)) return;
+		
 		new Thread(new HeartBeatThread(seed.getIp())).start();
 
 		String query = "INSERT INTO NODEINFO VALUES (default, ?, ?, ?, ?, ?, ?) ";
@@ -292,7 +292,7 @@ public class DbUtil {
 
 	}
 
-	public NodeInfo getNodeFromId(int id) {
+	public NodeInfo getNodeFromId(int id, String sip) {
 		String query = "SELECT * FROM NODEINFO WHERE ID=" + id;
 		Statement stmt;
 		try {
@@ -303,7 +303,8 @@ public class DbUtil {
 			if (!rs.next()) {
 				return null;
 			} else {
-				NodeInfo nodeinfo = builder.setIp(rs.getString(3)).setPort(rs.getInt(4)).setVivaldimetric(6).build();
+				
+				NodeInfo nodeinfo = builder.setIp(rs.getString(3)).setPort(rs.getInt(4)).setVivaldimetric(getDelay(sip, rs.getString(3))).build();
 				return nodeinfo;
 			}
 		} catch (SQLException e) {
@@ -313,12 +314,33 @@ public class DbUtil {
 		return null;
 	}
 	
+	private double getDelay(String sip, String string) {
+		// TODO Auto-generated method stub
+		if (string.isEmpty()) return 0;
+		String query = "SELECT DELAY FROM DELAYTABLE WHERE SIP='" + sip + "' AND DIP='" + string + "';";
+		Statement stmt;
+		try {
+			stmt = connect.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (!rs.next()) {
+				return 100000;
+			} else {
+				return rs.getDouble(1);
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 100000;
+		
+	}
+
 	public ArrayList<NodeInfo> getSeeders(String nodeids) {
 		ArrayList<NodeInfo> seeders = new ArrayList<NodeInfo>();
 		String[] nodes = nodeids.split("\\s+");
 		for (String id : nodes) {
 			int idint = Integer.parseInt(id);
-			NodeInfo nodeinfo = getNodeFromId(idint);
+			NodeInfo nodeinfo = getNodeFromId(idint, "");
 			if (nodeinfo != null) {
 				seeders.add(nodeinfo);
 			}
@@ -326,7 +348,7 @@ public class DbUtil {
 		return seeders;
 	}
 
-	public ArrayList<ChunkInfo> getChunks(String filename) {
+	public ArrayList<ChunkInfo> getChunks(String filename, String sip) {
 		ArrayList<ChunkInfo> chunklist = new ArrayList<ChunkInfo>();
 		String query = "SELECT * FROM CHUNKS WHERE FILENAME='" + filename + "';";
 		Statement stmt;
@@ -343,8 +365,9 @@ public class DbUtil {
 					String[] nodeids = rs.getString(6).trim().split("\\s+");
 					for (String id : nodeids) {
 						int idint = Integer.parseInt(id);
-						NodeInfo nodeinfo = getNodeFromId(idint);
+						NodeInfo nodeinfo = getNodeFromId(idint, sip);
 						if (nodeinfo != null) {
+							//Get delay val from this node to sip
 							builder.addSeeders(nodeinfo);
 						}
 					}
@@ -679,6 +702,33 @@ public class DbUtil {
 //		db.addFileInfo(fi3);
 		db.addFileInfo(fi4);
 
+	}
+
+	public void deleteDelayEntries(String ip) {
+		// TODO Auto-generated method stub
+		String query = "DELETE FROM DELAYTABLE WHERE DIP='" + ip + "' OR SIP='" + ip+ "';";
+		logger.info(query);
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(query);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void deleteNodeEntries(String ip) {
+		// TODO Auto-generated method stub
+		String query = "DELETE FROM NODEINFO WHERE IP='" + ip +"';";
+		logger.info(query);
+		try {
+			PreparedStatement pstmt = connect.prepareStatement(query);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	

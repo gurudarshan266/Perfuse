@@ -14,6 +14,7 @@ fi
 
 apt-get install python-pip python-dev build-essential
 apt-get install python-virtualenv
+apt-get install sqlite3
 
 if [ ! -d "venv" ]; then
     python -m pip install --upgrade pip
@@ -21,7 +22,6 @@ if [ ! -d "venv" ]; then
     virtualenv venv
     source venv/bin/activate
 fi
-
 
 python -m pip install --upgrade pip
 python -m pip install grpcio
