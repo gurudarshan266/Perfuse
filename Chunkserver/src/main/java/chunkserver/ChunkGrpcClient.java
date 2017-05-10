@@ -1,7 +1,7 @@
 package chunkserver;
 
-import com.google.common.annotations.VisibleForTesting;
-import com.google.protobuf.Message;
+//import com.google.common.annotations.VisibleForTesting;
+//import com.google.protobuf.Message;
 
 import chunkserver.DefinesProto.Delay;
 import chunkserver.DefinesProto.NodeInfo;
@@ -51,14 +51,15 @@ public class ChunkGrpcClient {
 		  return delay;
 	  }
 	  
-	  public Error heartBeat(Request req) {
+	  public chunkserver.DefinesProto.Error heartBeat(Request req) {
 	        //responseObserver.onError(new Exception("Goodbye world"));
-		  try {
-			  blockingStub.heartBeat(req);
-		  } catch (Exception e) {
-			  e.printStackTrace();
-		  }
-		  return null;
+		  chunkserver.DefinesProto.Error er = null;
+		  //try {
+			  er = blockingStub.heartBeat(req);
+		  //} catch (Exception e) {
+		//	  e.printStackTrace();
+		 // }
+		  return er;
 	  }
 	
 	  public static void main(String[] args) {
