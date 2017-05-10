@@ -161,7 +161,7 @@ class storageserver(StorageServerServicer):
 	ec = Error()
 	ec.ec = 0
 	#sleep(2)
-	print("HeartBEAT")
+	#print("HeartBEAT")
 	return ec 
 
 if __name__ == '__main__':
