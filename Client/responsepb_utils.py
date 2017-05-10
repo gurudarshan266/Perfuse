@@ -19,7 +19,8 @@ def is_chunkfile_present(hash):
 def add_chunk_to_db(db,chunk):
     #TODO: Get the node with the lowest vivaldi metric
     ssips = ""
-    for seeder in chunk.seeders:
+    sorted_seeders = sorted(chunk.seeders,key=lambda seeder: seeder.vivaldimetric)
+    for seeder in sorted_seeders:
 	ssips = ssips+seeder.ip+","
 
     #ssip = chunk.seeders[0].ip
