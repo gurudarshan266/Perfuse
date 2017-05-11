@@ -10,7 +10,7 @@ The Client uses Python FUSE library from https://github.com/terencehonles/fusepy
 
 To run Chunk Server, please ensure that MySQL and Maven are installed
 
-To run Client and Storage server, run "source setup.sh" in their respective directories with root privileges.
+To run Client and Storage server, run "source setup.sh" in their respective directories with root privileges. The script downloads and installs all the required modules like Google's gRPC, Protocol Buffer, DB plugins and compiles .proto files.
 
 Use "make clean" for Storage Server and Client to remove any chunks from the local cache. 
 
@@ -28,5 +28,5 @@ python fusefs.py <IP address of chunk server>
 To run Storage Server use:
 python storage_server.py <IP address of chunk server>
 
-Visusalizer used in the demo was forked from PubNub. AJAX, RabbitMQ and Web Workers were added to create asynchronous events on the map. Code is available at:
+Visusalizer used in the demo was forked from PubNub. AJAX, RabbitMQ and Web Workers were added to create asynchronous events on the map during file ransfers. Code is available at:
 https://github.com/gurudarshan266/webgl-visualization.git
