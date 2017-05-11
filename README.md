@@ -4,6 +4,8 @@ There are 3 parts to the code:
 2) Storage Server
 3) Client
 
+Codde is available at https://github.ncsu.edu/gpollep/Perfuse.git
+
 Chunk Server is written in Java. Client and Storage Server are written using Python.
 
 The Client uses Python FUSE library from https://github.com/terencehonles/fusepy
@@ -23,10 +25,10 @@ Replication Factor and the Client IP must be set in Client/constants.py file
 Storage Server IP must be set in StorageServer/constants.py file
 
 To run Client use:
-python fusefs.py <IP address of chunk server>
+python fusefs.py "IP address of chunk server"
 
 To run Storage Server use:
-python storage_server.py <IP address of chunk server>
+python storage_server.py "IP address of chunk server"
 
 Visusalizer used in the demo was forked from PubNub. AJAX, RabbitMQ and Web Workers were added to create asynchronous events on the map during file ransfers. Code is available at:
 https://github.com/gurudarshan266/webgl-visualization.git
