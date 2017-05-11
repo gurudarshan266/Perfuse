@@ -1,4 +1,4 @@
-# Perfuse: A Location Aware File System
+# Perfuse: A Location Aware Distributed File System
 There are 3 parts to the code:
 1) Chunk Server
 2) Storage Server
@@ -8,7 +8,7 @@ Chunk Server is written in Java. Client and Storage Server are written using Pyt
 
 The Client uses Python FUSE library from https://github.com/terencehonles/fusepy
 
-To run Chunk Server, please ensure that MySQL and Maven are installed
+To run Chunk Server, please ensure that Java 1.8, MySQL and Maven are installed
 
 To run Client and Storage server, run "source setup.sh" in their respective directories with root privileges. The script downloads and installs all the required modules like Google's gRPC, Protocol Buffer, DB plugins and compiles .proto files.
 
@@ -16,7 +16,7 @@ Use "make clean" for Storage Server and Client to remove any chunks from the loc
 
 Root privileges are mandatory for the Storage Server because PyPing module uses ICMP libraries to create ping packets which cannot be accessed without root access.
 
-Mount point for the Client FUSE file system is: /tmp/fuse2
+Mount point for the Client FUSE file system is /tmp/fuse2 which must be created manually before starting the Client.
 
 Replication Factor and the Client IP must be set in Client/constants.py file
 
