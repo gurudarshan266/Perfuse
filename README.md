@@ -1,4 +1,4 @@
-# Perfuse
+# Perfuse: A Location Aware File System
 There are 3 parts to the code:
 1) Chunk Server
 2) Storage Server
@@ -28,4 +28,5 @@ python fusefs.py <IP address of chunk server>
 To run Storage Server use:
 python storage_server.py <IP address of chunk server>
 
-
+Visusalizer used in the demo was forked from PubNub. AJAX, RabbitMQ and Web Workers were added to create asynchronous events on the map. Code is available at:
+https://github.com/gurudarshan266/webgl-visualization.git
