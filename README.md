@@ -4,7 +4,7 @@ There are 3 parts to the code:
 2) Storage Server
 3) Client
 
-Codde is available at https://github.ncsu.edu/gpollep/Perfuse.git
+Codde is available at https://github.com/gurudarshan266/Perfuse.git
 
 Chunk Server is written in Java. Client and Storage Server are written using Python.
 
